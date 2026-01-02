@@ -3,13 +3,11 @@ import cors from 'cors';
 
 import cookieParser from 'cookie-parser'; 
 
-
-// import notFound from './app/middleware/notFound';
 // import { stripeWebhookHandler } from './app/webhook/webhook.stripe';
 import path from 'path';
-// import router from './app/routes/index';
-// import globalErrorHandler from './app/middleware/globalErrorHandler';
-// import notFound from './app/middleware/notFound';
+import router from './app/routes/index';
+import globalErrorHandler from './app/middleware/globalErrorHandler';
+import notFound from './app/middleware/notFound';
 import morgan from 'morgan';
 
 const app: Application = express();
@@ -23,7 +21,7 @@ app.use(cookieParser());
 //   express.raw({ type: 'application/json' }),
 //   stripeWebhookHandler, 
 // );
-// app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
+
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use(
   cors({
@@ -40,10 +38,10 @@ app.use(
   }),
 );
 app.use(morgan("dev"))
-// app.use('/api/v1', router);
+app.use('/api/v1', router);
 app.get('/', (req: Request, res: Response) => {
   res.send('Rot Server is Running...');
 });
-// app.use(globalErrorHandler);
-// app.use(notFound);
+app.use(globalErrorHandler);
+app.use(notFound);
 export default app;
