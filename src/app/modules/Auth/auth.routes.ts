@@ -9,12 +9,21 @@ import { USER_ROLE } from './auth.constant';
 import { AuthValidation } from './authValidation';
 import validateRequest from '../../middleware/validateRequest';
 import auth from '../../middleware/auth';
+import { upload } from '../../middleware/multer';
 
 const router = express.Router();
 
 router.post(
   '/register',
-  validateRequest(AuthValidation.registerUserValidationSchema),
+ upload.single('image'),
+  (req: Request, res: Response, next: NextFunction) => {
+    console.log("req data--->",req.body.body);
+    if (req.body) {
+      req.body = JSON.parse(req.body.body);
+    }
+    next();
+  },
+
 
   AuthControllers.registerUser,
 );
@@ -25,7 +34,7 @@ router.post('/login',
 router.post('/changePassword',
   
     validateRequest(AuthValidation.changePasswordValidationSchema),
-    auth(USER_ROLE.member,USER_ROLE.admin,USER_ROLE.owner,USER_ROLE.superAdmin),
+    auth(USER_ROLE.user,USER_ROLE.admin,USER_ROLE.superAdmin),
     AuthControllers.changePassword
 )
 router.post(

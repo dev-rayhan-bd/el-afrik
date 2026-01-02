@@ -1,12 +1,13 @@
 import { z } from "zod";
 
-const loginValidationSchema = z.object({
-  email: z.string().min(1, { message: "Email is required" }),
-  password: z.string().min(1, { message: "Password is required" }),
-});
+const emailSchema = z
+  .string({ message: "Email is required" })
+  .trim()
+  .email({ message: "Invalid email address" })
+  .toLowerCase();
 
 const passwordSchema = z
-  .string() // must be a string; non-strings will be rejected by Zod
+  .string({ message: "Password is required" })
   .min(8, { message: "Password must be at least 8 characters" })
   .max(128, { message: "Password must be at most 128 characters" })
   .refine((v) => v.trim() === v, {
@@ -22,6 +23,35 @@ const passwordSchema = z
     message: "Password must contain at least one special character",
   });
 
+
+const contactSchema = z
+  .string({ message: "Contact is required" })
+  .trim()
+  .min(1, { message: "Contact is required" })
+  .max(20, { message: "Contact cannot exceed 20 characters" });
+
+const locationSchema = z
+  .string({ message: "Location is required" })
+  .trim()
+  .min(1, { message: "Location is required" })
+  .max(100, { message: "Location cannot exceed 100 characters" });
+
+
+const dobSchema = z
+  .union([
+    z.date(),
+    z
+      .string({ message: "Date of birth is required" })
+      .trim()
+      .min(1, { message: "Date of birth is required" }),
+  ])
+  .transform((v) => (v instanceof Date ? v : new Date(v)))
+  .refine((d) => !Number.isNaN(d.getTime()), { message: "Invalid date of birth" });
+const loginValidationSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, { message: "Password is required" }),
+});
+
 export const registerUserValidationSchema = z
   .object({
     firstName: z
@@ -35,49 +65,81 @@ export const registerUserValidationSchema = z
       .trim()
       .min(1, { message: "Last name cannot be empty" })
       .max(50, { message: "Last name cannot exceed 50 characters" }),
+    fcmToken: z
+      .string({ message: "fcmToken is required" })
+      .trim(),
 
-    email: z
-      .string({ message: "Email is required" })
-      .trim()
-      .email({ message: "Invalid email address" })
-      .toLowerCase(),
+    email: emailSchema,
+
+
+    contact: contactSchema,
+
+    location: locationSchema,
+
+    dob: dobSchema,
 
     password: passwordSchema,
-
-    refercode: z.string().trim().optional(),
   })
 
 
-export const editProfileSchema = z.object({
-  firstName: z.string().min(1,"Name is required").optional(),
-  lastName: z.string().min(1,"Name is required").optional(),
-});
 
+export const editProfileSchema = z
+  .object({
+    firstName: z
+      .string()
+      .trim()
+      .min(1, "First name is required")
+      .max(50, "First name cannot exceed 50 characters")
+      .optional(),
+
+    lastName: z
+      .string()
+      .trim()
+      .min(1, "Last name is required")
+      .max(50, "Last name cannot exceed 50 characters")
+      .optional(),
+
+    contact: contactSchema.optional(),
+
+    location: locationSchema.optional(),
+
+    dob: dobSchema.optional(),
+  })
+  .strict();
+
+/**
+ * Forgot/Verify OTP
+ */
 const forgotPasswordSchema = z.object({
-  email: z.email("Invalid email address"),
+  email: emailSchema,
 });
 
 export const verifyOtpSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: emailSchema,
   otp: z
-    .string()
-    .length(6,"OTP must be exactly 6 digits")
-    .regex(/^\d+$/,"OTP must contain only digits"),
+    .string({ message: "OTP is required" })
+    .length(6, "OTP must be exactly 6 digits")
+    .regex(/^\d+$/, "OTP must contain only digits"),
 });
 
+/**
+ * Password change/reset
+ */
 const changePasswordValidationSchema = z.object({
-  oldPassword: z.string().min(1, { message: "Old password is required"}),
-  newPassword: z.string().min(1, { message: "New password is required"}),
+  oldPassword: z.string().min(1, { message: "Old password is required" }),
+  newPassword: passwordSchema,
 });
-const resetPasswordValidationSchema = z
-  .object({
-    email: z.string().email("Invalid email address"),
-    newPassword: z.string().min(1, { message: "New password is required"}),
-  })
 
+const resetPasswordValidationSchema = z.object({
+  email: emailSchema,
+  newPassword: passwordSchema,
+});
 
+/**
+ * Refresh token
+ */
 const refreshTokenValidationSchema = z.object({
-  refreshToken: z.string().min(1, { message: " token is required!"}),
+  refreshToken: z.string().min(1, { message: "Token is required!" }),
 });
 
 export const AuthValidation = {

@@ -9,7 +9,7 @@ export interface TUser {
   image?: string;
   email: string;
   password: string;
-  dateOfBirth?: Date;
+  dob: Date;
   contact: string;
   location: string;
   verification?: {
@@ -17,6 +17,7 @@ export interface TUser {
     expireDate: Date | null;
   };
   status: string;
+  fcmToken: string;
   passwordChangedAt?: Date;
   role: "user";
 }

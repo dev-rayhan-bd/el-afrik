@@ -57,18 +57,6 @@ router.get(
   UserControllers.getMyProfile,
 );
 
-router.patch(
-  '/update-screentime-data',
- 
-  auth(USER_ROLE.user),
-  UserControllers.updateScreenTimeData,
-);
-router.patch(
-  '/update-movement-data',
- 
-  auth(USER_ROLE.user),
-  UserControllers.updateMovementData,
-);
 
 
 
