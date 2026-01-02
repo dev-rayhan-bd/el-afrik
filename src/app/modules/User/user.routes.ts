@@ -39,7 +39,7 @@ router.patch(
       return res.status(400).json({ message: 'Invalid data format' });
     }
   },
-  auth(USER_ROLE.owner,USER_ROLE.member,USER_ROLE.superAdmin,USER_ROLE.admin),
+  auth(USER_ROLE.user,USER_ROLE.superAdmin,USER_ROLE.admin),
   validateRequest(editProfileSchema),
   UserControllers.updateProfile,
 );
@@ -53,20 +53,20 @@ router.get(
 router.get(
   '/my-profile',
  
-  auth(USER_ROLE.owner,USER_ROLE.member),
+  auth(USER_ROLE.user),
   UserControllers.getMyProfile,
 );
 
 router.patch(
   '/update-screentime-data',
  
-  auth(USER_ROLE.owner,USER_ROLE.member),
+  auth(USER_ROLE.user),
   UserControllers.updateScreenTimeData,
 );
 router.patch(
   '/update-movement-data',
  
-  auth(USER_ROLE.owner,USER_ROLE.member),
+  auth(USER_ROLE.user),
   UserControllers.updateMovementData,
 );
 

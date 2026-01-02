@@ -14,6 +14,9 @@ const userSchema = new Schema<TUser, User, IUserMethods>({
   lastName: { type: String, required: true },
      image: { type: String },
   email: { type: String, required: true, unique: true },
+  contact: { type: String, required: true},
+  location: { type: String, required: true},
+  dateOfBirth: { type: Date },
   password: { type: String, required: true,select:false },
      verification: {
       code: {
@@ -25,17 +28,11 @@ const userSchema = new Schema<TUser, User, IUserMethods>({
         default: null,
       },
     },
- refercode: { type: String, unique: true, sparse: true },
-  rotScore: { type: Number,default: 0 },
-    referredBy: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
-     referrals: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-  avatarAchived: { type: [String], default: [] }, 
-  screenTimeData: { type: Schema.Types.Mixed, default: {} },
-  movementData: { type: Schema.Types.Mixed, default: {} },
-  rank: { type: Number,default: 0 },
+
+
   status: { type: String, required: true, enum: UserStatus, default: 'in-progress'},
-  walletBalance: { type: Number,default: 0},
-  role: { type: String, required: true, enum: ['owner', 'member'],default:'member' },
+
+  role: { type: String, required: true, enum: ['user'],default:'user' },
 }, {
   timestamps: true, 
 });

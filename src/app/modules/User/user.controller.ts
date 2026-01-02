@@ -25,8 +25,8 @@ const updateProfile = catchAsync(async (req: Request, res: Response) => {
   // if (req.file) {
   //   const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
   //   payload.image = imageUrl;
-
   // }
+  
       if (req.file) {
       const imageUrl = await uploadImage(req)
       payload.image = imageUrl;
