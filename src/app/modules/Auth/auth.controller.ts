@@ -8,6 +8,7 @@ import sendResponse from '../../utils/sendResponse';
 import catchAsync from '../../utils/catchAsync';
 import { AuthServices } from './auth.services';
 import config from '../../config';
+import uploadImage from '../../middleware/upload';
 
 const registerUser = async (
   req: Request,
@@ -18,7 +19,10 @@ const registerUser = async (
     
     const userPayload = req.body;
 // console.log("userpayload--->",userPayload);
-
+   if (req.file) {
+      const imageUrl = await uploadImage(req);
+      userPayload.image = imageUrl;
+    }
 // console.log("ueser payload--->",userPayload);
     const result = await AuthServices.registeredUserIntoDB(userPayload);
 

@@ -16,10 +16,16 @@ export interface TUser {
     code: string | null;
     expireDate: Date | null;
   };
+  refercode: string;
   status: string;
   fcmToken: string;
   passwordChangedAt?: Date;
   role: "user";
+  point: number;
+  loyalityTier: string;
+  lastView: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface IUserMethods {

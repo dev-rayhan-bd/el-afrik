@@ -26,7 +26,7 @@ const userSchema = new Schema<TUser, User, IUserMethods>(
         default: null,
       },
     },
-
+ refercode: { type: String, unique: true, sparse: true },
     status: {
       type: String,
       required: true,
@@ -36,6 +36,9 @@ const userSchema = new Schema<TUser, User, IUserMethods>(
 
     role: { type: String, required: true, enum: ["user"], default: "user" },
     fcmToken: { type: String, required: true },
+    point: { type: Number, default:0},
+    loyalityTier: { type: String, default: "Bronze"},
+    lastView:{ type: String },
     passwordChangedAt: { type: Date },
   },
   {

@@ -17,7 +17,7 @@ router.post(
   '/register',
  upload.single('image'),
   (req: Request, res: Response, next: NextFunction) => {
-    console.log("req data--->",req.body.body);
+    // console.log("req data--->",req.body.body);
     if (req.body) {
       req.body = JSON.parse(req.body.body);
     }
