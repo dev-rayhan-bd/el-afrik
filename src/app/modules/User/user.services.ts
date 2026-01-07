@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import AppError from "../../errors/AppError";
 import { TEditProfile } from "./user.constant";
-
+import httpStatus from 'http-status';
 import { UserModel } from "./user.model";
 
 
@@ -39,7 +40,15 @@ const getDashboardStatsFromDB = async (year: number) => {
 
   return { monthlyData };
 };
+const deletePrifileFromDB = async (id: string) => {
+  const event = await UserModel.findByIdAndDelete(id);
 
+  if (!event) {
+    throw new AppError(httpStatus.NOT_FOUND, 'FAQ not found!');
+  }
+
+  return event; // return deleted user if neededd
+};
 
 
 
@@ -47,5 +56,6 @@ export const UserServices = {
   updateProfileFromDB,
   getDashboardStatsFromDB,
   getMyProfileFromDB,
+  deletePrifileFromDB
 
 };

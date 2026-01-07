@@ -25,7 +25,13 @@ const registerUser = async (
     }
 // console.log("ueser payload--->",userPayload);
     const result = await AuthServices.registeredUserIntoDB(userPayload);
-
+//set refress token on cookies
+  res.cookie('refreshToken', result.refreshToken, {
+    secure: config.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'none',
+    maxAge: 1000 * 60 * 60 * 24 * 365,
+  });
     sendResponse(res, {
       success: true,
       message: 'User registered successfully',

@@ -16,9 +16,9 @@ import config from "../../config";
 // register new user
 const registeredUserIntoDB = async (payload: TUser) => {
   // console.log(payload);
-  const user = await UserModel.isUserExistsByEmail(payload.email);
+  const existing = await UserModel.isUserExistsByEmail(payload.email);
   // console.log(user);
-  if (user) {
+  if (existing) {
     throw new AppError(httpStatus.CONFLICT, "This user is already exists!");
   }
   // generate a unique refer code
@@ -29,11 +29,30 @@ const registeredUserIntoDB = async (payload: TUser) => {
     ...payload,
     refercode,
   };
+    const result = await UserModel.create(newUserData);
+    const user = await UserModel.isUserExistsByEmail(newUserData.email);
 
+ const jwtPayload = {
+    userId: user._id!.toString(),
+    role: user?.role,
+  };
   // console.log('new user data',newUserData);
+  const accessToken = createToken(
+    jwtPayload,
+    config.jwt_access_secret as string,
+    config.jwt_access_expires_in as string
+  );
+  const refreshToken = createToken(
+    jwtPayload,
+    config.jwt_refresh_secret as string,
+    config.jwt_refresh_expires_in as string
+  );
 
-  const result = await UserModel.create(newUserData);
-  return result;
+   return {
+    result,
+    accessToken,
+    refreshToken,
+  };
 };
 // login user
 const loginUser = async (payload: TLoginUser) => {

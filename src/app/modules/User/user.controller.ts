@@ -70,7 +70,18 @@ const meId = req?.user?.userId
   });
 });
 
+const deleteProfile = catchAsync(async (req: Request, res: Response) => {
+const meId = req?.user?.userId
 
+  const result = await UserServices.deletePrifileFromDB(meId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'User deleted successfully!',
+    data: result,
+  });
+})
 
 
 
@@ -81,5 +92,6 @@ export const UserControllers = {
   updateProfile,
 getDashboardStats,
 getMyProfile,
+deleteProfile
 
 };

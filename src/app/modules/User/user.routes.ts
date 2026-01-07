@@ -57,9 +57,9 @@ router.get(
   UserControllers.getMyProfile,
 );
 
+router.delete('/delete-profile',auth(USER_ROLE.superAdmin,USER_ROLE.admin,USER_ROLE.user),UserControllers.deleteProfile);
 
 
-
-router.get('/dashboard/stats/:year', UserControllers.getDashboardStats);
+router.get('/dashboard/stats/:year',  auth(USER_ROLE.superAdmin,USER_ROLE.admin), UserControllers.getDashboardStats);
 
 export const UserRoutes = router;
