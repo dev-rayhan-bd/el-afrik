@@ -26,6 +26,7 @@ export interface TUser {
   lastView: string;
   createdAt?: Date;
   updatedAt?: Date;
+   isOtpVerified:boolean
 }
 
 export interface IUserMethods {

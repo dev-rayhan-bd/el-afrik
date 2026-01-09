@@ -27,6 +27,10 @@ router.post(
 
   AuthControllers.registerUser,
 );
+router.post(
+  '/resendOtp',
+  AuthControllers.resendOtp,
+);
 router.post('/login',
     validateRequest(AuthValidation.loginValidationSchema),
     AuthControllers.userLogin
@@ -52,10 +56,16 @@ router.post(
   validateRequest(AuthValidation.resetPasswordValidationSchema),
   AuthControllers.resetPassword,
 );
+
 router.post(
   '/verifyOtp',
   validateRequest(AuthValidation.verifyOtpSchema),
   AuthControllers.verifyYourOTP,
+);
+router.post(
+  '/regOtpVerify',
+  validateRequest(AuthValidation.verifyOtpSchema),
+  AuthControllers.VerifyOtpForRegistration,
 );
 
 

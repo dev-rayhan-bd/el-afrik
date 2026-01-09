@@ -11,7 +11,7 @@ export const sendMail = async (to: string, subject: string, text: string) => {
   });
 
   await transporter.sendMail({
-    from: `CaleSalle ${config.smtp_from}`,
+    from: `El-Afrik ${config.smtp_from}`,
     to,
     subject,
     text,

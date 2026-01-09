@@ -15,28 +15,71 @@ import config from "../../config";
 
 // register new user
 const registeredUserIntoDB = async (payload: TUser) => {
-  // console.log(payload);
   const existing = await UserModel.isUserExistsByEmail(payload.email);
-  // console.log(user);
   if (existing) {
-    throw new AppError(httpStatus.CONFLICT, "This user is already exists!");
+    throw new AppError(httpStatus.CONFLICT, "This user already exists!");
   }
-  // generate a unique refer code
-  const refercode = await generateReferCode();
-  // console.log("refercode",referCode);
-  // attach referCode to payload
-  const newUserData = {
-    ...payload,
-    refercode,
-  };
-    const result = await UserModel.create(newUserData);
-    const user = await UserModel.isUserExistsByEmail(newUserData.email);
 
- const jwtPayload = {
+  const refercode = await generateReferCode();
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  
+  const newUserData = { 
+    ...payload, 
+    refercode,
+    verification: {
+      code: otp,
+      expireDate: new Date(Date.now() + 1 * 60 * 1000), // 1-minute expiry
+    }
+  };
+  
+  console.log("new user----->", newUserData);
+
+  const user = await UserModel.create(newUserData);
+
+  // Send OTP email
+  await sendMail(
+    payload.email,
+    "Your OTP Code",
+    `Your OTP code is: ${otp}. It will expire in 1 minute.`
+  );
+
+  return {
+    result: user,
+  };
+};
+export const verifyOTPForRegistration = async (email: string, otp: string) => {
+  const user = await UserModel.findOne({ email });
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  //  Check OTP expiry
+  if (
+    !user.verification?.expireDate ||
+    user.verification.expireDate < new Date()
+  ) {
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "OTP has expired,resend Otp And try again"
+    );
+  }
+
+  //  Compare OTP
+  const isMatch = user.compareVerificationCode(otp);
+  if (!isMatch) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "OTP not matched, try again");
+  }
+  // when otp is verified
+  user.isOtpVerified = true;
+  //  If successful, you can clear the OTP
+  user.verification = undefined;
+  await user.save();
+  // Generate JWT tokens
+  const jwtPayload = {
     userId: user._id!.toString(),
     role: user?.role,
   };
-  // console.log('new user data',newUserData);
   const accessToken = createToken(
     jwtPayload,
     config.jwt_access_secret as string,
@@ -47,11 +90,63 @@ const registeredUserIntoDB = async (payload: TUser) => {
     config.jwt_refresh_secret as string,
     config.jwt_refresh_expires_in as string
   );
-
-   return {
-    result,
+  return {
+    status: httpStatus.OK,
+    message: "OTP verified successfully",
     accessToken,
     refreshToken,
+  };
+};
+// resend otp 
+// auth.service.ts
+
+const resendOTP = async (email: string) => {
+
+  const user = await UserModel.findOne({ email });
+  
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found!");
+  }
+
+  if (user.isOtpVerified) {
+    throw new AppError(httpStatus.BAD_REQUEST, "User is already verified!");
+  }
+
+  if (user.verification?.expireDate) {
+    const lastOtpTime = new Date(user.verification.expireDate).getTime() - 60 * 1000; // OTP creation time
+    const now = Date.now();
+    const timeDiff = (now - lastOtpTime) / 1000; // seconds
+
+    if (timeDiff < 30) {
+      const waitTime = Math.ceil(30 - timeDiff);
+      throw new AppError(
+        httpStatus.TOO_MANY_REQUESTS,
+        `Please wait ${waitTime} seconds before requesting a new OTP`
+      );
+    }
+  }
+
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+
+  const hashedOtp = bcrypt.hashSync(otp, Number(config.bcrypt_salt_rounds));
+
+  await UserModel.findByIdAndUpdate(user._id, {
+    verification: {
+      code: hashedOtp,
+      expireDate: new Date(Date.now() + 1 * 60 * 1000), // 1-minute expiry
+    },
+  });
+
+  await sendMail(
+    email,
+    "Your New OTP Code",
+    `Your new OTP code is: ${otp}. It will expire in 1 minute.`
+  );
+
+  return {
+    message: "OTP sent successfully!",
   };
 };
 // login user
@@ -60,6 +155,13 @@ const loginUser = async (payload: TLoginUser) => {
   // console.log('login user',user);
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "This user is not found!");
+  }
+  // Ensure OTP is verified
+  if (!user.isOtpVerified) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "OTP verification is required before logging in!"
+    );
   }
   if (!(await UserModel.isPasswordMatched(payload?.password, user?.password))) {
     throw new AppError(httpStatus.UNAUTHORIZED, "Invalid Credentials!");
@@ -124,35 +226,32 @@ const changePassword = async (
   return null;
 };
 // forgot password api
-const resetPassword = async (
-
-  payload: {email:string,newPassword: string },
-) => {
+const resetPassword = async (payload: {
+  email: string;
+  newPassword: string;
+}) => {
   // checking if the user is exist
   // console.log("payload->",payload);
   const user = await UserModel.isUserExistsByEmail(payload.email);
   //   console.log('change pass user',user);
   if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, 'This user is not found !');
+    throw new AppError(httpStatus.NOT_FOUND, "This user is not found !");
   }
 
   //checking if the password is correct
 
-
-
-
   //hash new password
   const newHashedPassword = await bcrypt.hash(
     payload.newPassword,
-    Number(config.bcrypt_salt_rounds),
+    Number(config.bcrypt_salt_rounds)
   );
   //   console.log('user data chnge pass 78 line',userData);
   await UserModel.findOneAndUpdate(
-   { email: payload.email },
+    { email: payload.email },
     {
       password: newHashedPassword,
       passwordChangedAt: new Date(),
-    },
+    }
   );
   //   console.log('pass change 89 line',result);
   return null;
@@ -272,5 +371,7 @@ export const AuthServices = {
   refreshToken,
   forgotPass,
   verifyOTP,
+  verifyOTPForRegistration,
   resetPassword,
+  resendOTP
 };

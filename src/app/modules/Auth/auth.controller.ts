@@ -25,16 +25,10 @@ const registerUser = async (
     }
 // console.log("ueser payload--->",userPayload);
     const result = await AuthServices.registeredUserIntoDB(userPayload);
-//set refress token on cookies
-  res.cookie('refreshToken', result.refreshToken, {
-    secure: config.NODE_ENV === 'production',
-    httpOnly: true,
-    sameSite: 'none',
-    maxAge: 1000 * 60 * 60 * 24 * 365,
-  });
+
     sendResponse(res, {
       success: true,
-      message: 'User registered successfully',
+      message: 'Otp is send your email succesfully!Please verify your otp',
       statusCode: httpStatus.CREATED,
       data: result,
     });
@@ -42,6 +36,37 @@ const registerUser = async (
     next(err);
   }
 };
+
+const VerifyOtpForRegistration=catchAsync(async (req:Request, res:Response) => {
+    const { email,otp}= req.body;
+  // console.log("request body",req.body);
+    const result = await AuthServices.verifyOTPForRegistration(email,otp);
+    //set refress token on cookies
+  res.cookie('refreshToken', result.refreshToken, {
+    secure: config.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'none',
+    maxAge: 1000 * 60 * 60 * 24 * 365,
+  });
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'Otp Verify succesfully!',
+      data: result,
+    });
+  });
+const resendOtp = catchAsync(async (req, res) => {
+    const {email} = req.body;
+  // console.log("request body",req.body);
+    const result = await AuthServices.resendOTP(email);
+    
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'Otp is send again your email succesfully!',
+      data: result,
+    });
+  });
 
 const userLogin=catchAsync(async(req,res)=>{
   const result = await AuthServices.loginUser(req.body);
@@ -87,6 +112,7 @@ const resetPassword = catchAsync(async (req, res) => {
     });
   });
 
+
 const forgotPassword = catchAsync(async (req:Request, res:Response) => {
     const { email}= req.body;
   // console.log("request body",email);
@@ -127,5 +153,5 @@ const verifyYourOTP = catchAsync(async (req:Request, res:Response) => {
   });
 
 export const AuthControllers = {
-  registerUser,userLogin,changePassword,refreshToken,forgotPassword,verifyYourOTP,resetPassword
+  registerUser,userLogin,changePassword,refreshToken,forgotPassword,verifyYourOTP,resetPassword,VerifyOtpForRegistration,resendOtp
 };

@@ -38,6 +38,7 @@ const userSchema = new Schema<TUser, User, IUserMethods>(
     fcmToken: { type: String, required: true },
     point: { type: Number, default:0},
     loyalityTier: { type: String, default: "Bronze"},
+    isOtpVerified: { type: Boolean, default: false },
     lastView:{ type: String },
     passwordChangedAt: { type: Date },
   },
