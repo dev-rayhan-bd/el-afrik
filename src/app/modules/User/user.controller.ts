@@ -102,6 +102,18 @@ const meId = req?.user?.userId
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
+    message: 'Profile deleted successfully!',
+    data: result,
+  });
+})
+const deleteUser = catchAsync(async (req: Request, res: Response) => {
+const {id} = req.params
+
+  const result = await UserServices.deleteUserFromDB(id);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
     message: 'User deleted successfully!',
     data: result,
   });
@@ -118,6 +130,7 @@ getDashboardStats,
 getMyProfile,
 deleteProfile,
 getAllUser,
-getSingleProfile
+getSingleProfile,
+deleteUser
 
 };

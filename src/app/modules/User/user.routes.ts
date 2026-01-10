@@ -70,6 +70,7 @@ router.get(
 );
 
 router.delete('/delete-profile',auth(USER_ROLE.superAdmin,USER_ROLE.admin,USER_ROLE.user),UserControllers.deleteProfile);
+router.delete('/delete-user/:id',auth(USER_ROLE.superAdmin,USER_ROLE.admin),UserControllers.deleteUser);
 
 
 router.get('/dashboard/stats/:year',  auth(USER_ROLE.superAdmin,USER_ROLE.admin), UserControllers.getDashboardStats);

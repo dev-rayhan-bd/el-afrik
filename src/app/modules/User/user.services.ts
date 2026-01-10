@@ -50,7 +50,16 @@ const deletePrifileFromDB = async (id: string) => {
   const event = await UserModel.findByIdAndDelete(id);
 
   if (!event) {
-    throw new AppError(httpStatus.NOT_FOUND, 'FAQ not found!');
+    throw new AppError(httpStatus.NOT_FOUND, 'User not found!');
+  }
+
+  return event; // return deleted user if neededd
+};
+const deleteUserFromDB = async (id: string) => {
+  const event = await UserModel.findByIdAndDelete(id);
+
+  if (!event) {
+    throw new AppError(httpStatus.NOT_FOUND, 'User not found!');
   }
 
   return event; // return deleted user if neededd
@@ -70,6 +79,6 @@ export const UserServices = {
   getDashboardStatsFromDB,
   getMyProfileFromDB,
   deletePrifileFromDB,
-  getAllUserFromDB,getSingleProfileFromDB
+  getAllUserFromDB,getSingleProfileFromDB,deleteUserFromDB
 
 };
