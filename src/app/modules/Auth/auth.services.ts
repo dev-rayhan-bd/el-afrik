@@ -23,16 +23,16 @@ const registeredUserIntoDB = async (payload: TUser) => {
   const refercode = await generateReferCode();
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  
-  const newUserData = { 
-    ...payload, 
+
+  const newUserData = {
+    ...payload,
     refercode,
     verification: {
       code: otp,
       expireDate: new Date(Date.now() + 1 * 60 * 1000), // 1-minute expiry
-    }
+    },
   };
-  
+
   console.log("new user----->", newUserData);
 
   const user = await UserModel.create(newUserData);
@@ -97,13 +97,12 @@ export const verifyOTPForRegistration = async (email: string, otp: string) => {
     refreshToken,
   };
 };
-// resend otp 
+// resend otp
 // auth.service.ts
 
 const resendOTP = async (email: string) => {
-
   const user = await UserModel.findOne({ email });
-  
+
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found!");
   }
@@ -113,7 +112,8 @@ const resendOTP = async (email: string) => {
   }
 
   if (user.verification?.expireDate) {
-    const lastOtpTime = new Date(user.verification.expireDate).getTime() - 60 * 1000; // OTP creation time
+    const lastOtpTime =
+      new Date(user.verification.expireDate).getTime() - 60 * 1000; // OTP creation time
     const now = Date.now();
     const timeDiff = (now - lastOtpTime) / 1000; // seconds
 
@@ -126,9 +126,7 @@ const resendOTP = async (email: string) => {
     }
   }
 
-
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
 
   const hashedOtp = bcrypt.hashSync(otp, Number(config.bcrypt_salt_rounds));
 
@@ -156,6 +154,9 @@ const loginUser = async (payload: TLoginUser) => {
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "This user is not found!");
   }
+  if (!(await UserModel.isPasswordMatched(payload?.password, user?.password))) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "Invalid Credentials!");
+  }
   // Ensure OTP is verified
   if (!user.isOtpVerified) {
     throw new AppError(
@@ -163,9 +164,7 @@ const loginUser = async (payload: TLoginUser) => {
       "OTP verification is required before logging in!"
     );
   }
-  if (!(await UserModel.isPasswordMatched(payload?.password, user?.password))) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "Invalid Credentials!");
-  }
+
   const jwtPayload = {
     userId: user._id!.toString(),
     role: user?.role,
@@ -222,8 +221,22 @@ const changePassword = async (
       passwordChangedAt: new Date(),
     }
   );
-  //   console.log('pass change 89 line',result);
-  return null;
+ const jwtPayload = {
+    userId: user._id!.toString(),
+    role: user?.role,
+  };
+
+  const accessToken = createToken(
+    jwtPayload,
+    config.jwt_access_secret as string,
+    config.jwt_access_expires_in as string
+  );
+  const refreshToken = createToken(
+    jwtPayload,
+    config.jwt_refresh_secret as string,
+    config.jwt_refresh_expires_in as string
+  );
+  return {accessToken,refreshToken};
 };
 // forgot password api
 const resetPassword = async (payload: {
@@ -373,5 +386,5 @@ export const AuthServices = {
   verifyOTP,
   verifyOTPForRegistration,
   resetPassword,
-  resendOTP
+  resendOTP,
 };
