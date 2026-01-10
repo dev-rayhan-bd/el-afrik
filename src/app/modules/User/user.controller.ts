@@ -69,6 +69,30 @@ const meId = req?.user?.userId
     data: result,
   });
 });
+const getSingleProfile = catchAsync(async (req: Request, res: Response) => {
+
+  const { id } = req.params;
+  const result = await UserServices.getMyProfileFromDB(id);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Profile retrive successfully!',
+    data: result,
+  });
+});
+const getAllUser = catchAsync(async (req: Request, res: Response) => {
+
+  const result = await UserServices.getAllUserFromDB(req?.query);
+ 
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Users retrive successfully!',
+    data: result,
+  });
+});
 
 const deleteProfile = catchAsync(async (req: Request, res: Response) => {
 const meId = req?.user?.userId
@@ -92,6 +116,8 @@ export const UserControllers = {
   updateProfile,
 getDashboardStats,
 getMyProfile,
-deleteProfile
+deleteProfile,
+getAllUser,
+getSingleProfile
 
 };
