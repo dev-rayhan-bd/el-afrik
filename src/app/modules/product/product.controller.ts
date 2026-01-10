@@ -46,8 +46,7 @@ const createProduct = async (
       [fieldname: string]: Express.Multer.File[];
     };
 
-    //  Make sure the files exist
-    console.log("req.files --->", files);
+   
 
 
     const imageFiles = files?.image || [];
@@ -118,6 +117,6 @@ payload.image = path;
   }
 };
 
-export const FaqControllers = {
+export const ProductControllers = {
 getAllProduct,getSingleProduct,createProduct,deleteProduct,editProduct
 };

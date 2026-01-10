@@ -192,25 +192,45 @@ const changePassword = async (
   me: JwtPayload,
   payload: { oldPassword: string; newPassword: string }
 ) => {
-  // console.log("me--->",me);
-  // checking if the user is exist
+  // checking if the user exists
   const user = await UserModel.isUserExistsById(me.userId);
-  //   console.log('change pass user',user);
+  
   if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, "This user is not found !");
+    throw new AppError(httpStatus.NOT_FOUND, "This user is not found!");
   }
 
-  //checking if the password is correct
+  // check user status
+  if (user.status === "blocked") {
+    throw new AppError(httpStatus.FORBIDDEN, "This user is blocked!");
+  }
 
-  if (!(await UserModel.isPasswordMatched(payload.oldPassword, user?.password)))
-    throw new AppError(httpStatus.FORBIDDEN, "Password do not matched");
+  // checking if the password is correct
+  const isPasswordMatched = await UserModel.isPasswordMatched(
+    payload.oldPassword, 
+    user?.password
+  );
+  
+  if (!isPasswordMatched) {
+    throw new AppError(httpStatus.FORBIDDEN, "Old password is incorrect!");
+  }
 
-  //hash new password
+  //  Check: new password should not be same as old password
+  if (payload.oldPassword === payload.newPassword) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST, 
+      "New password cannot be same as old password!"
+    );
+  }
+
+  // hash new password
   const newHashedPassword = await bcrypt.hash(
     payload.newPassword,
     Number(config.bcrypt_salt_rounds)
   );
-  //   console.log('user data chnge pass 78 line',userData);
+
+
+  const passwordChangedAt = new Date(Date.now() - 1000);
+
   await UserModel.findOneAndUpdate(
     {
       _id: me.userId,
@@ -218,10 +238,12 @@ const changePassword = async (
     },
     {
       password: newHashedPassword,
-      passwordChangedAt: new Date(),
+      passwordChangedAt: passwordChangedAt,
     }
   );
- const jwtPayload = {
+
+  // Create new tokens AFTER setting passwordChangedAt
+  const jwtPayload = {
     userId: user._id!.toString(),
     role: user?.role,
   };
@@ -231,12 +253,14 @@ const changePassword = async (
     config.jwt_access_secret as string,
     config.jwt_access_expires_in as string
   );
+  
   const refreshToken = createToken(
     jwtPayload,
     config.jwt_refresh_secret as string,
     config.jwt_refresh_expires_in as string
   );
-  return {accessToken,refreshToken};
+
+  return { accessToken, refreshToken };
 };
 // forgot password api
 const resetPassword = async (payload: {

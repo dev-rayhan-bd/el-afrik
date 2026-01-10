@@ -20,7 +20,7 @@ export interface TUser {
   status: string;
   fcmToken: string;
   passwordChangedAt?: Date;
-  role: "user";
+  role: TUserRole;
   point: number;
   loyalityTier: string;
   lastView: string;

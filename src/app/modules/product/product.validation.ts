@@ -20,8 +20,8 @@ const nonNegativeNumber = (field: string) =>
 const ProductStatusZod = z.enum(["in_stock", "out_of_stock"]);
 
 export const createProductSchema = z.object({
-  body: z
-    .object({
+
+
       name: z
         .string()
         .trim()
@@ -53,13 +53,11 @@ export const createProductSchema = z.object({
       promo: z.string().trim().min(1, "Promo code is required"),
 
       isFavourite: z.boolean().optional().default(false),
-    })
-    .strict(),
+
 });
 
 export const updateProductSchema = z.object({
-  body: z
-    .object({
+
       name: z.string().trim().min(1).max(100).optional(),
       images: z.array(z.string().trim().min(1)).min(1).optional(),
       weight: z.coerce.number().min(0).optional(),
@@ -72,6 +70,5 @@ export const updateProductSchema = z.object({
       description: z.string().trim().min(1).max(2000).optional(),
       promo: z.string().trim().min(1).optional(),
       isFavourite: z.boolean().optional(),
-    })
-    .strict(),
+  
 });
