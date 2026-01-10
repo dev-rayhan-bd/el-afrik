@@ -42,11 +42,11 @@ router.delete(
 
 router.patch(
   "/update-product/:id",
-  upload.array("images"),
+  upload.fields([{ name: "image", maxCount: 12 }]),
   (req: Request, res: Response, next: NextFunction) => {
     // console.log("req data--->",req.body.data);;
-    if (req.body.data) {
-      req.body = JSON.parse(req.body.data);
+    if (req.body) {
+      req.body = JSON.parse(req.body.body);
     }
     next();
   },

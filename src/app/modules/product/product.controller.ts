@@ -92,23 +92,35 @@ const deleteProduct = catchAsync(async (req: Request, res: Response) => {
 const editProduct = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
-//   console.log("create revieew-->",req.body);
   try {
- 
-  const {id} = req.params;
-  const path = `${req.protocol}://${req.get('host')}/uploads/${req.file?.filename}`;
-const payload = req.body;
-payload.image = path;
+    const { id } = req.params;
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-
-    // console.log("Data with file paths: ", data);
+    const imageFiles = files?.image || [];
+  
+    let uploadedUrls: string[] = [];
     
-    const result = await ProductServices.updateProductFromDB(id,payload)
+    if (imageFiles.length > 0) {
+      uploadedUrls = await Promise.all(
+        imageFiles.map((file) => uploadImage(req, file))
+      );
+    }
+
+    const body = req.body || {};
+
+    const payload = {
+      ...body,
+      images: uploadedUrls.length > 0 ? uploadedUrls : undefined,  
+    };
+
+    // Update the product in the database
+    const result = await ProductServices.updateProductFromDB(id, payload);
+
     sendResponse(res, {
       success: true,
-      message: `Product updated Succesfull`,
+      message: `Product updated successfully`,
       statusCode: httpStatus.OK,
       data: result,
     });
@@ -116,6 +128,7 @@ payload.image = path;
     next(err);
   }
 };
+
 
 export const ProductControllers = {
 getAllProduct,getSingleProduct,createProduct,deleteProduct,editProduct
