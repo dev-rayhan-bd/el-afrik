@@ -52,7 +52,7 @@ router.patch('/update-category/:id',
      upload.single('image'),
   (req: Request, res: Response, next: NextFunction) => {
     // console.log("req data--->",req.body.data);
-    if (req.body) {
+    if (req.body.body) {
       req.body = JSON.parse(req.body.body);
     }
     next();

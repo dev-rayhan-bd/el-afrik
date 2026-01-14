@@ -22,27 +22,23 @@ router.patch(
   upload.single('image'),
   (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.body) {
-        const parsedData = JSON.parse(req.body.body);
-
-        // Merge parsed JSON fields into req.body (preserve file info)
-        req.body = {
-          ...req.body,
-          ...parsedData,
-        };
+  
+      if (req.body.body) {
+        req.body = JSON.parse(req.body.body);
       }
-
-
       next();
     } catch (error) {
-   
-      return res.status(400).json({ message: 'Invalid data format' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid JSON format' 
+      });
     }
   },
-  auth(USER_ROLE.user,USER_ROLE.superAdmin,USER_ROLE.admin),
+  auth(USER_ROLE.user, USER_ROLE.superAdmin, USER_ROLE.admin),
   validateRequest(editProfileSchema),
   UserControllers.updateProfile,
 );
+
 
 router.get(
   '/profile',

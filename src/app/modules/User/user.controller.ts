@@ -19,21 +19,22 @@ import uploadImage from '../../middleware/upload';
 const updateProfile = catchAsync(async (req: Request, res: Response) => {
   console.log("req.user",req.user);
   const id = req?.user?.userId
-  const payload: TEditProfile = { ...req.body };
 
 
-  // if (req.file) {
-  //   const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-  //   payload.image = imageUrl;
-  // }
+let imageUrl: string | undefined;
+
 
       if (req.file) {
-      const imageUrl = await uploadImage(req)
-      payload.image = imageUrl;
+      imageUrl = await uploadImage(req)
+  
     }
 
-  console.log("payload----->", payload);
+  const body = req.body || {};
 
+    const payload = {
+      ...body,
+      image: imageUrl? imageUrl : undefined,  
+    };
   const result = await UserServices.updateProfileFromDB(id, payload);
   console.log("result--->", result);
 

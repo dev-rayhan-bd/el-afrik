@@ -45,7 +45,7 @@ router.patch(
   upload.fields([{ name: "image", maxCount: 12 }]),
   (req: Request, res: Response, next: NextFunction) =>{
     // console.log("req data--->",req.body.data);;
-    if (req.body) {
+    if (req.body.body) {
       req.body = JSON.parse(req.body.body);
     }
     next();
