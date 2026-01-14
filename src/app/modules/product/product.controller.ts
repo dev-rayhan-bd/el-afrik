@@ -75,6 +75,25 @@ const createProduct = async (
     next(err);
   }
 };
+const createReview = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+//   console.log("create revieew-->",req.body);
+  try {
+    const result = await ProductServices.addReviewIntoDB(req.body);
+
+    sendResponse(res, {
+      success: true,
+      message: 'Review Sent Successfull',
+      statusCode: httpStatus.CREATED,
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
 const deleteProduct = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -131,5 +150,5 @@ const editProduct = async (
 
 
 export const ProductControllers = {
-getAllProduct,getSingleProduct,createProduct,deleteProduct,editProduct
+getAllProduct,getSingleProduct,createProduct,deleteProduct,editProduct,createReview
 };

@@ -1,6 +1,17 @@
 // interfaces/product.interface.ts
 
-import { Document, Types } from 'mongoose';
+import mongoose, { Document, Types } from 'mongoose';
+export type TReview ={
+
+  package_id: mongoose.Types.ObjectId; 
+  rating: number;           
+  
+}
+
+export type TDiscount={
+  discount_type:string;
+  discount_amount:number;
+}
 
 export interface IProduct {
   name: string;
@@ -8,12 +19,14 @@ export interface IProduct {
   weight: number;
   category: Types.ObjectId;
   price: number;
+  discount?:TDiscount;
   quantity: number;
   status: ProductStatus;
   deliveryFee: number;
+  review:TReview[];
   points: number;
   description: string;
-  promo: string;
+  promo?: string;
   isFavourite: boolean;
 }
 

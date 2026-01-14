@@ -6,7 +6,7 @@ import httpStatus from "http-status";
 
 import QueryBuilder from "../../builder/QueryBuilder";
 import { ProductModel } from "./product.model";
-import { IProduct } from "./product.interface";
+import { IProduct, TReview } from "./product.interface";
 
 const getAllProductFromDB = async (query: Record<string, unknown>) => {
   const queryBuilder = new QueryBuilder(ProductModel.find(), query);
@@ -51,10 +51,36 @@ const updateProductFromDB = async (id: string, payload: IProduct) => {
   return updated;
 };
 
+
+export const addReviewIntoDB = async (payload: TReview) => {
+  const { package_id, rating } = payload;
+
+  // ...validate package_id, ensure package exists...
+
+  const reviewDoc = {
+
+    package_id,      // <-- add this because your schema requires it
+    rating,
+
+  };
+
+  const updated = await ProductModel.findByIdAndUpdate(
+    package_id,
+    { $push: { review: reviewDoc } },
+    { new: true, runValidators: true }
+  );
+
+  if (!updated) throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, 'Failed to add review');
+  return updated;
+};
+
+
+
 export const ProductServices = {
   getAllProductFromDB,
   getSingleProductFromDB,
   addProductIntoDB,
   deleteProductFromDB,
   updateProductFromDB,
+  addReviewIntoDB
 };

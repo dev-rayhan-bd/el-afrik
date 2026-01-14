@@ -1,7 +1,30 @@
 // models/product.model.ts
 
 import mongoose, { Schema, Model, model } from 'mongoose';
-import { IProductDocument, ProductStatus } from './product.interface';
+import { IProductDocument, ProductStatus, TReview } from './product.interface';
+
+
+const ReviewSchema: Schema = new Schema<TReview>(
+  {
+ 
+    package_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Package",
+      required: [true, "Package reference is required"],
+    },
+
+    rating: {
+      type: Number,
+      required: [true, "Rating is required"],
+      min: [1, "Rating must be at least 1"],
+      max: [5, "Rating cannot be more than 5"],
+    },
+  
+  },
+  {
+    timestamps: true, // Automatically create createdAt and updatedAt fields
+  }
+);
 
 
 const ProductSchema: Schema<IProductDocument> = new Schema(
@@ -35,7 +58,23 @@ const ProductSchema: Schema<IProductDocument> = new Schema(
       required: [true, 'Price is required'],
       min: [0, 'Price cannot be negative']
     },
-    quantity: {
+    // Discount field added to the schema
+    discount: {
+
+        discount_type: {
+          type: String,
+          enum: ['percentage', 'fixed'],
+ 
+        },
+        discount_amount: {
+          type: Number,
+
+          min: [0, 'Discount amount cannot be negative']
+        }
+
+
+    },
+      quantity: {
       type: Number,
       required: [true, 'Quantity is required'],
       min: [0, 'Quantity cannot be negative'],
@@ -63,9 +102,10 @@ const ProductSchema: Schema<IProductDocument> = new Schema(
       trim: true,
       maxlength: [2000, 'Description cannot exceed 2000 characters']
     },
+        review: { type: [ReviewSchema], default: [] },
     promo: {
       type: String,
-      required: [true, 'Promo code is required'],
+ 
     },
     isFavourite: {
       type: Boolean,

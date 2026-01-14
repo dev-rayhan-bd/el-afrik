@@ -35,6 +35,10 @@ export const createProductSchema = z.object({
       category: objectId, // required by default
 
       price: nonNegativeNumber("Price"),
+      discount: z.object({
+        discount_type: z.enum(["percentage", "fixed"]),
+        discount_amount: nonNegativeNumber("Discount amount"),
+      }).optional(),
 
       quantity: nonNegativeNumber("Quantity").optional().default(0),
 
@@ -50,7 +54,7 @@ export const createProductSchema = z.object({
         .min(1, "Description is required")
         .max(2000, "Description cannot exceed 2000 characters"),
 
-      promo: z.string().trim().min(1, "Promo code is required"),
+      promo: z.string().trim().optional(),
 
       isFavourite: z.boolean().optional().default(false),
 

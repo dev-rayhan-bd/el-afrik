@@ -43,7 +43,7 @@ router.delete(
 router.patch(
   "/update-product/:id",
   upload.fields([{ name: "image", maxCount: 12 }]),
-  (req: Request, res: Response, next: NextFunction) => {
+  (req: Request, res: Response, next: NextFunction) =>{
     // console.log("req data--->",req.body.data);;
     if (req.body) {
       req.body = JSON.parse(req.body.body);
@@ -55,7 +55,11 @@ router.patch(
   validateRequest(updateProductSchema),
   ProductControllers.editProduct
 );
+router.post('/addReview',
 
+  ProductControllers.createReview,
+
+);
 // router.post('/checkout',PackageControllers.initiateOrderPayment)
 
 // router.get('/allReview/:id',PackageControllers.getAllReview)
