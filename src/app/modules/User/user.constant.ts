@@ -3,8 +3,14 @@ export type TProfilePictureUpdatePayload = {
 };
 export type TEditProfile = {
   image?: string;
-  firstName:String;
-lastName?:string
+  firstName?:String;
+  
+lastName?:string;
+fullName?:string;
+email?:string;
+contact?:string;
+dob?:string;
+location?:string;
  
 };
 

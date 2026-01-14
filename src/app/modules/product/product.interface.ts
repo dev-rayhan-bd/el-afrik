@@ -20,6 +20,7 @@ export interface IProduct {
   category: Types.ObjectId;
   price: number;
   discount?:TDiscount;
+    discountedPrice?: number;
   quantity: number;
   status: ProductStatus;
   deliveryFee: number;
@@ -30,6 +31,7 @@ export interface IProduct {
   calories?: number;
   readyTime?: string;
   isFavourite: boolean;
+  isFeatured?: boolean;
 }
 
 export interface IProductDocument extends IProduct, Document {

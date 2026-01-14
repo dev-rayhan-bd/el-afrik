@@ -22,8 +22,8 @@ router.patch(
   upload.single('image'),
   (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.body.data) {
-        const parsedData = JSON.parse(req.body.data);
+      if (req.body) {
+        const parsedData = JSON.parse(req.body.body);
 
         // Merge parsed JSON fields into req.body (preserve file info)
         req.body = {

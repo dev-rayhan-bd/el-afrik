@@ -67,12 +67,24 @@ class QueryBuilder<T> {
     return this;
   }
 
-  sort() {
-    const sort =
-      (this?.query?.sort as string)?.split(',')?.join(' ') || '-createdAt';
-    this.modelQuery = this.modelQuery.sort(sort as any);
-    return this;
+sort(field: string = 'createdAt', order: 1 | -1 = -1) {
+  let sortField: string | { [key: string]: 1 | -1 } = this.query?.sort as string || `${field}`;
+
+  // Check if 'price' is part of the query or use the provided field
+  if (this.query?.price) {
+    const priceSort = this.query.price === 'asc' ? 1 : -1;
+    sortField = { price: priceSort }; // Sort by price
+  } else {
+    sortField = { [field]: order }; // Use dynamic sorting by the provided field (default to 'createdAt')
   }
+
+  // Apply sort
+  this.modelQuery = this.modelQuery.sort(sortField);
+
+  return this;
+}
+
+
 
   paginate() {
     const page = Number(this.query?.page) || 1;

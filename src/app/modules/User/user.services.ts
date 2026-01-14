@@ -8,6 +8,10 @@ import QueryBuilder from "../../builder/QueryBuilder";
 
 
 const updateProfileFromDB = async (id: string, payload: TEditProfile) => {
+  const firstName=payload.firstName
+const lastName=payload.lastName
+const fullName=`${firstName} ${lastName}`
+payload.fullName=fullName
   const result = await UserModel.findByIdAndUpdate(id, payload, {
     new: true,
   });

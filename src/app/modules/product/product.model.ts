@@ -58,6 +58,7 @@ const ProductSchema: Schema<IProductDocument> = new Schema(
       required: [true, 'Price is required'],
       min: [0, 'Price cannot be negative']
     },
+
     // Discount field added to the schema
     discount: {
 
@@ -74,6 +75,8 @@ const ProductSchema: Schema<IProductDocument> = new Schema(
 
 
     },
+        discountedPrice:{   type: Number,
+      min: [0, 'Discounted Price cannot be negative']},
       quantity: {
       type: Number,
       required: [true, 'Quantity is required'],
@@ -119,6 +122,10 @@ const ProductSchema: Schema<IProductDocument> = new Schema(
  
     },
     isFavourite: {
+      type: Boolean,
+      default: false
+    },
+    isFeatured: {
       type: Boolean,
       default: false
     }

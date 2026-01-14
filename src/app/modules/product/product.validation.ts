@@ -65,6 +65,8 @@ readyTime: z
 
       isFavourite: z.boolean().optional().default(false),
 
+      isFeatured: z.boolean().optional().default(false),
+
 });
 
 export const updateProductSchema = z.object({

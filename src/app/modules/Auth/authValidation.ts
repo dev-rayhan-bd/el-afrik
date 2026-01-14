@@ -105,7 +105,7 @@ export const editProfileSchema = z
 
     dob: dobSchema.optional(),
   })
-  .strict();
+
 
 /**
  * Forgot/Verify OTP

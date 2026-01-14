@@ -19,7 +19,10 @@ const registeredUserIntoDB = async (payload: TUser) => {
   if (existing) {
     throw new AppError(httpStatus.CONFLICT, "This user already exists!");
   }
-
+const firstName=payload.firstName
+const lastName=payload.lastName
+const fullName=`${firstName} ${lastName}`
+payload.fullName=fullName
   const refercode = await generateReferCode();
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -155,7 +158,7 @@ const loginUser = async (payload: TLoginUser) => {
     throw new AppError(httpStatus.NOT_FOUND, "This user is not found!");
   }
   if (!(await UserModel.isPasswordMatched(payload?.password, user?.password))) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "Invalid Credentials!");
+    throw new AppError(httpStatus.BAD_REQUEST, "Password is incorrect!");
   }
   // Ensure OTP is verified
   if (!user.isOtpVerified) {
