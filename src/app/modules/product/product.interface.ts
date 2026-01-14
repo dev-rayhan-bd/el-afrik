@@ -27,6 +27,8 @@ export interface IProduct {
   points: number;
   description: string;
   promo?: string;
+  calories?: number;
+  readyTime?: string;
   isFavourite: boolean;
 }
 

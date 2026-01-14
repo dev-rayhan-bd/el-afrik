@@ -7,6 +7,7 @@ import termsRouter from '../modules/Terms/terms.route';
 import { FaqRoutes } from '../modules/FAQ/faq.routes';
 import { ContactRoutes } from '../modules/ContactUs/contact.route';
 import { ProductRoutes } from '../modules/product/product.routes';
+import { CategoryRoutes } from '../modules/categories/categories.route';
 
 
 
@@ -46,6 +47,10 @@ const moduleRoutes = [
   {
     path: '/product',
     route:ProductRoutes
+  },
+  {
+    path: '/category',
+    route:CategoryRoutes
   },
  
 

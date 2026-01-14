@@ -96,6 +96,17 @@ const ProductSchema: Schema<IProductDocument> = new Schema(
       default: 0,
       min: [0, 'Points cannot be negative']
     },
+    calories: {
+      type: Number,
+      min: [0, 'Calories cannot be negative'],
+      required: [true, 'Calories is required']
+    },
+    readyTime: {
+      type: String,
+      required: [true, 'Ready time is required'],
+      trim: true,
+      maxlength: [50, 'Ready time cannot exceed 50 characters']
+    },
     description: {
       type: String,
       required: [true, 'Description is required'],

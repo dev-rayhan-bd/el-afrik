@@ -38,7 +38,7 @@ export const createProductSchema = z.object({
       discount: z.object({
         discount_type: z.enum(["percentage", "fixed"]),
         discount_amount: nonNegativeNumber("Discount amount"),
-      }).optional(),
+      }).optional(), 
 
       quantity: nonNegativeNumber("Quantity").optional().default(0),
 
@@ -47,6 +47,13 @@ export const createProductSchema = z.object({
       deliveryFee: nonNegativeNumber("Delivery fee").optional().default(0),
 
       points: nonNegativeNumber("Points").optional().default(0),
+calories: nonNegativeNumber("Calories").optional(),
+
+readyTime: z
+        .string()
+        .trim()
+        .min(1, "Ready time is required")
+        .max(50, "Ready time cannot exceed 50 characters"),
 
       description: z
         .string()
