@@ -9,6 +9,7 @@ import { ContactRoutes } from '../modules/ContactUs/contact.route';
 import { ProductRoutes } from '../modules/product/product.routes';
 import { CategoryRoutes } from '../modules/categories/categories.route';
 import { CartRoutes } from '../modules/Cart/cart.routes';
+import { OrderRoutes } from '../modules/Orders/orders.routes';
 
 
 
@@ -56,6 +57,10 @@ const moduleRoutes = [
   {
     path: '/cart',
     route:CartRoutes
+  },
+  {
+    path: '/order',
+    route:OrderRoutes
   },
  
 

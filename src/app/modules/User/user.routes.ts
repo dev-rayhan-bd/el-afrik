@@ -49,7 +49,7 @@ router.get(
 router.get(
   '/my-profile',
  
-  auth(USER_ROLE.user),
+  auth(USER_ROLE.user,USER_ROLE.superAdmin,USER_ROLE.admin),
   UserControllers.getMyProfile,
 );
 router.get(

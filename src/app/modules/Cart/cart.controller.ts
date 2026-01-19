@@ -5,6 +5,7 @@ import sendResponse from '../../utils/sendResponse';
 import { CartServices } from './cart.services';
 
 
+
 // Get all items from the cart
 const getAllItemsFromCart = catchAsync(async (req: Request, res: Response) => {
   const  userId  = req?.user?.userId; 
@@ -91,6 +92,17 @@ const clearCart = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+
+
+
+
+
+
+
+
+
+
 
 export const cartControllers = {
   getAllItemsFromCart,
