@@ -44,9 +44,9 @@ router.get('/allCategory', categoriesControllers.getAllCategories);
 router.get('/single-category/:id',categoriesControllers.getSingleCategories);
 
 
-router.delete('/delete-category/:id',categoriesControllers.deleteCategories,  auth(
+router.delete('/delete-category/:id', auth(
     USER_ROLE.superAdmin,
-  ),);
+  ), categoriesControllers.deleteCategories);
 
 router.patch('/update-category/:id',
      upload.single('image'),

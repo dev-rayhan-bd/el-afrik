@@ -56,7 +56,7 @@ router.get(
   '/single/:id',
  
 
-  UserControllers.getMyProfile,
+  UserControllers.getSingleProfile,
 );
 router.get(
   '/all',

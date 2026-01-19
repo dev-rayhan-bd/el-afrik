@@ -8,6 +8,7 @@ import { FaqRoutes } from '../modules/FAQ/faq.routes';
 import { ContactRoutes } from '../modules/ContactUs/contact.route';
 import { ProductRoutes } from '../modules/product/product.routes';
 import { CategoryRoutes } from '../modules/categories/categories.route';
+import { CartRoutes } from '../modules/Cart/cart.routes';
 
 
 
@@ -51,6 +52,10 @@ const moduleRoutes = [
   {
     path: '/category',
     route:CategoryRoutes
+  },
+  {
+    path: '/cart',
+    route:CartRoutes
   },
  
 
