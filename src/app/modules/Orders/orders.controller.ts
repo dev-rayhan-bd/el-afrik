@@ -147,6 +147,7 @@ const trackOrder = catchAsync(async (req: Request, res: Response) => {
  */
 const cancelOrder = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
+
   const { reason } = req.body;
   const userId = req.user?.userId;
 

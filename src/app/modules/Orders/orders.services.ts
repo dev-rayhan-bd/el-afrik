@@ -62,7 +62,8 @@ const createCheckoutSession = async (input: ICreateOrderInput) => {
     }
 
     const unitPrice = product.discountedPrice || product.price;
-    const itemTotal = unitPrice * cartItem.quantity;
+const itemTotal = parseFloat((unitPrice * cartItem.quantity).toFixed(2));
+
     const itemPoints = (product.points || 0) * cartItem.quantity;
 
     // Add to order items
@@ -77,9 +78,10 @@ const createCheckoutSession = async (input: ICreateOrderInput) => {
     });
 
     subtotal += itemTotal;
+    
     totalPoints += itemPoints;
 
-    // ⭐ Delivery fee only for DELIVERY type
+    //  Delivery fee only for DELIVERY type
     if (orderType === OrderType.DELIVERY) {
       totalDeliveryFee += (product.deliveryFee || 0) * cartItem.quantity;
     }
@@ -99,7 +101,8 @@ const createCheckoutSession = async (input: ICreateOrderInput) => {
   }
 
   // Calculate total (delivery fee is 0 for pickup)
-  const totalAmount = subtotal + totalDeliveryFee;
+  // const totalAmount = subtotal + totalDeliveryFee;
+const totalAmount = parseFloat((subtotal + totalDeliveryFee).toFixed(2));
 
   // 3. Create Order
   const order = await OrderModel.create({
@@ -129,10 +132,10 @@ const createCheckoutSession = async (input: ICreateOrderInput) => {
     ],
   });
 
-  console.log(` Order created: ${order.orderNumber}`);
-  console.log(`   Type: ${orderType}`);
-  console.log(`   Delivery Fee: $${totalDeliveryFee}`);
-  console.log(`   Points: ${totalPoints}`);
+  // console.log(` Order created: ${order.orderNumber}`);
+  // console.log(`   Type: ${orderType}`);
+  // console.log(`   Delivery Fee: $${totalDeliveryFee}`);
+  // console.log(`   Points: ${totalPoints}`);
 
   // 4. Add delivery fee as line item (only for delivery)
   if (orderType === OrderType.DELIVERY && totalDeliveryFee > 0) {
@@ -199,20 +202,20 @@ const handlePaymentSuccess = async (session: Stripe.Checkout.Session) => {
   const orderId = session.metadata?.orderId || session.client_reference_id;
 
   if (!orderId) {
-    console.error(' No order ID in session');
+    // console.error(' No order ID in session');
     return null;
   }
 
   const order = await OrderModel.findById(orderId);
 
   if (!order) {
-    console.error(' Order not found:', orderId);
+    // console.error(' Order not found:', orderId);
     return null;
   }
 
   // Already processed
   if (order.paymentStatus === PaymentStatus.PAID) {
-    console.log('ℹ Order already processed:', order.orderNumber);
+    // console.log('ℹ Order already processed:', order.orderNumber);
     return order;
   }
 
@@ -358,7 +361,7 @@ const getMyOrders = async (
       .sort(sortOptions)
       .skip(skip)
       .limit(limit)
-      .populate('items.product', 'name images'),
+      .populate('items.product', 'name images points'),
     OrderModel.countDocuments(query),
   ]);
 
@@ -381,8 +384,8 @@ const getOrderById = async (orderId: string, userId?: string) => {
   if (userId) query.user = userId;
 
   const order = await OrderModel.findOne(query)
-    .populate('user', 'firstName lastName email point')
-    .populate('items.product', 'name images');
+    .populate('user', 'firstName lastName email point image')
+    .populate('items.product', 'name images  points');
 
   if (!order) {
     throw new AppError(httpStatus.NOT_FOUND, 'Order not found');
@@ -399,8 +402,8 @@ const getOrderByNumber = async (orderNumber: string, userId?: string) => {
   if (userId) query.user = userId;
 
   const order = await OrderModel.findOne(query)
-    .populate('user', 'firstName lastName email point')
-    .populate('items.product', 'name images');
+    .populate('user', 'firstName lastName email point image')
+    .populate('items.product', 'name images points');
 
   if (!order) {
     throw new AppError(httpStatus.NOT_FOUND, 'Order not found');
@@ -553,7 +556,7 @@ const getAllOrders = async (
       .sort(sortOptions)
       .skip(skip)
       .limit(limit)
-      .populate('user', 'firstName lastName email')
+      .populate('user', 'firstName lastName email image')
       .populate('items.product', 'name'),
     OrderModel.countDocuments(query),
     OrderModel.aggregate([{ $group: { _id: '$orderStatus', count: { $sum: 1 } } }]),
