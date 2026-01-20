@@ -361,7 +361,8 @@ const getMyOrders = async (
       .sort(sortOptions)
       .skip(skip)
       .limit(limit)
-      .populate('items.product', 'name images points'),
+        .populate('user', 'firstName lastName email point image')
+    .populate('items.product', 'name images  points'),
     OrderModel.countDocuments(query),
   ]);
 
