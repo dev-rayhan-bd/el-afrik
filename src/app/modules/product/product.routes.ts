@@ -30,9 +30,9 @@ router.post(
   ProductControllers.createProduct
 );
 
-router.get("/allProduct", ProductControllers.getAllProduct);
+router.get("/allProduct", auth(USER_ROLE.superAdmin,USER_ROLE.user), ProductControllers.getAllProduct);
 
-router.get("/single-product/:id", ProductControllers.getSingleProduct);
+router.get("/single-product/:id", auth(USER_ROLE.superAdmin,USER_ROLE.user), ProductControllers.getSingleProduct);
 
 router.delete(
   "/delete-product/:id",

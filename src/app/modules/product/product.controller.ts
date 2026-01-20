@@ -15,7 +15,9 @@ import uploadImage from '../../middleware/upload';
 
 const getAllProduct = catchAsync(async(req:Request,res:Response)=>{
 
-  const result = await ProductServices.getAllProductFromDB(req?.query);
+ const userId = req.user?.userId; 
+
+  const result = await ProductServices.getAllProductFromDB(req.query, userId);
   sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
@@ -26,7 +28,9 @@ const getAllProduct = catchAsync(async(req:Request,res:Response)=>{
 })
 const getSingleProduct = catchAsync(async(req:Request,res:Response)=>{
   const { id } = req.params;
-  const result = await ProductServices.getSingleProductFromDB(id);
+ const userId = req.user?.userId; 
+
+  const result = await ProductServices.getSingleProductFromDB(id, userId);
   sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,

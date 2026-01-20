@@ -8,33 +8,78 @@ import QueryBuilder from "../../builder/QueryBuilder";
 import { ProductModel } from "./product.model";
 import { IProduct, TReview } from "./product.interface";
 import CategoryModel from "../categories/categories.model";
+import { WishlistModel } from "../Wishlist/wishlist.model";
+import mongoose from "mongoose";
 
-const getAllProductFromDB = async (query: Record<string, unknown>) => {
+// const getAllProductFromDB = async (query: Record<string, unknown>) => {
+//   const queryBuilder = new QueryBuilder(ProductModel.find(), query);
+
+//   // Ensure sorting by price if 'sort' query is passed as 'asc' or 'desc'
+//   if (query.sort === 'asc') {
+//     queryBuilder.sort('price', 1); // Ascending sort by price
+//   } else if (query.sort === 'desc') {
+//     queryBuilder.sort('price', -1); // Descending sort by price
+//   } else {
+//     queryBuilder.sort(); // Default sort, for example by 'createdAt'
+//   }
+
+//   queryBuilder.search(["name"]).filter().paginate();
+  
+//   const result = await queryBuilder.modelQuery;
+//   const meta = await queryBuilder.countTotal();
+
+//   return { meta, result };
+// };
+
+
+// const getSingleProductFromDB = async (id: string) => {
+//   const result = await ProductModel.findById(id);
+//   return result;
+// };
+const getAllProductFromDB = async (query: Record<string, unknown>, userId?: string) => {
   const queryBuilder = new QueryBuilder(ProductModel.find(), query);
-
-  // Ensure sorting by price if 'sort' query is passed as 'asc' or 'desc'
-  if (query.sort === 'asc') {
-    queryBuilder.sort('price', 1); // Ascending sort by price
-  } else if (query.sort === 'desc') {
-    queryBuilder.sort('price', -1); // Descending sort by price
-  } else {
-    queryBuilder.sort(); // Default sort, for example by 'createdAt'
-  }
 
   queryBuilder.search(["name"]).filter().paginate();
   
   const result = await queryBuilder.modelQuery;
   const meta = await queryBuilder.countTotal();
 
-  return { meta, result };
+  let wishlistProductIds: string[] = [];
+  if (userId) {
+    const wishlist = await WishlistModel.findOne({ user: userId });
+    if (wishlist) {
+      wishlistProductIds = wishlist.products.map((id) => id.toString());
+    }
+  }
+
+  const modifiedResult = result.map((product) => {
+    const productObj = product.toObject();
+    return {
+      ...productObj,
+      isFavourite: wishlistProductIds.includes(product._id.toString()),
+    };
+  });
+
+  return { meta, result: modifiedResult };
 };
 
+const getSingleProductFromDB = async (id: string, userId?: string) => {
+  const product = await ProductModel.findById(id);
+  if (!product) {
+    throw new AppError(httpStatus.NOT_FOUND, "Product is not found!");
+  }
 
-const getSingleProductFromDB = async (id: string) => {
-  const result = await ProductModel.findById(id);
-  return result;
+  let isFavourite = false;
+  if (userId) {
+    const wishlist = await WishlistModel.findOne({ user: userId });
+    if (wishlist) {
+      isFavourite = wishlist.products.includes(new mongoose.Types.ObjectId(id) as any);
+    }
+  }
+
+  const productObj = product.toObject();
+  return { ...productObj, isFavourite };
 };
-
 const addProductIntoDB = async (payload: IProduct) => {
   console.log("product data->", payload.category);
 
