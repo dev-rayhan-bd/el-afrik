@@ -13,6 +13,7 @@ import { OrderRoutes } from '../modules/Orders/orders.routes';
 import { WishlistRoutes } from '../modules/Wishlist/wishlist.routes';
 import { SpecialPromoRoutes } from '../modules/SpecialPromo/specialpromo.routes';
 import { RewardRoutes } from '../modules/Reward/reward.routes';
+import { PointRedemptionRoutes } from '../modules/PointRedemtion/pointredemtion.routes';
 
 
 
@@ -76,6 +77,10 @@ const moduleRoutes = [
   {
     path: '/reward',
     route:RewardRoutes
+  },
+  {
+    path: '/redeem',
+    route:PointRedemptionRoutes
   },
  
 

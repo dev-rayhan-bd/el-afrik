@@ -1,4 +1,5 @@
-// modules/order/order.model.ts
+// c:\STA\El-afrik\src\app\modules\Orders\orders.model.ts
+
 import mongoose, { Schema, model } from 'mongoose';
 import {
   IOrderDocument,
@@ -7,9 +8,9 @@ import {
   OrderStatus,
   OrderType,
   PaymentStatus,
+  PaymentMethod,
 } from './orders.interface';
 
-// Order Item Schema
 const OrderItemSchema = new Schema<IOrderItem>(
   {
     product: {
@@ -44,11 +45,15 @@ const OrderItemSchema = new Schema<IOrderItem>(
       default: 0,
       min: 0,
     },
+    pointsCost: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   { _id: false }
 );
 
-// Status History Schema
 const StatusHistorySchema = new Schema<IStatusHistory>(
   {
     status: {
@@ -67,7 +72,6 @@ const StatusHistorySchema = new Schema<IStatusHistory>(
   { _id: false }
 );
 
-// Shipping Address Schema
 const ShippingAddressSchema = new Schema(
   {
     name: String,
@@ -82,7 +86,6 @@ const ShippingAddressSchema = new Schema(
   { _id: false }
 );
 
-// Main Order Schema
 const OrderSchema = new Schema<IOrderDocument>(
   {
     user: {
@@ -92,7 +95,6 @@ const OrderSchema = new Schema<IOrderDocument>(
     },
     orderNumber: {
       type: String,
-   
       unique: true,
     },
     items: {
@@ -103,8 +105,6 @@ const OrderSchema = new Schema<IOrderDocument>(
         message: 'Order must have at least one item',
       },
     },
-
-    // Pricing
     subtotal: {
       type: Number,
       required: true,
@@ -125,8 +125,6 @@ const OrderSchema = new Schema<IOrderDocument>(
       required: true,
       min: 0,
     },
-
-    // Points
     totalPoints: {
       type: Number,
       default: 0,
@@ -136,8 +134,16 @@ const OrderSchema = new Schema<IOrderDocument>(
       type: Boolean,
       default: false,
     },
-
-    // Order Type & Status
+    pointsUsed: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    pointsValue: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     orderType: {
       type: String,
       enum: Object.values(OrderType),
@@ -152,35 +158,30 @@ const OrderSchema = new Schema<IOrderDocument>(
       type: [StatusHistorySchema],
       default: [],
     },
-
-    // Payment
     paymentStatus: {
       type: String,
       enum: Object.values(PaymentStatus),
       default: PaymentStatus.PENDING,
     },
+    paymentMethod: {
+      type: String,
+      enum: Object.values(PaymentMethod),
+      default: PaymentMethod.CARD,
+    },
     stripeSessionId: String,
     stripePaymentIntentId: String,
-
-    // Customer Info
     customerName: String,
-    customerEmail: {
-      type: String,
- 
-    },
+    customerEmail: String,
     customerPhone: String,
-
-    // Shipping (only for delivery)
     shippingAddress: ShippingAddressSchema,
-
-    // Pickup
     pickupTime: String,
-
-    // Timestamps
+    redemptionDeliveryType: {
+      type: String,
+      enum: ['pickup', 'delivery'],
+    },
     paidAt: Date,
     deliveredAt: Date,
     cancelledAt: Date,
-
     estimatedTime: String,
     notes: String,
   },
@@ -191,9 +192,6 @@ const OrderSchema = new Schema<IOrderDocument>(
   }
 );
 
-// ═══════════════════════════════════════════════════════════════════
-// FIXED: Generate unique order number (No next() needed with async)
-// ═══════════════════════════════════════════════════════════════════
 OrderSchema.pre('save', async function () {
   if (!this.orderNumber) {
     const date = new Date();
@@ -201,17 +199,19 @@ OrderSchema.pre('save', async function () {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const random = Math.random().toString(36).substring(2, 7).toUpperCase();
-    this.orderNumber = `ORD-${year}${month}${day}-${random}`;
+
+    const prefix = this.orderType === OrderType.POINT_REDEMPTION ? 'PTS' : 'ORD';
+    this.orderNumber = `${prefix}-${year}${month}${day}-${random}`;
   }
 });
 
-// Indexes
 OrderSchema.index({ user: 1, createdAt: -1 });
 OrderSchema.index({ orderNumber: 1 });
 OrderSchema.index({ stripeSessionId: 1 });
 OrderSchema.index({ orderStatus: 1 });
 OrderSchema.index({ orderType: 1 });
 OrderSchema.index({ paymentStatus: 1 });
+OrderSchema.index({ paymentMethod: 1 });
 OrderSchema.index({ createdAt: -1 });
 
 export const OrderModel = model<IOrderDocument>('Order', OrderSchema);

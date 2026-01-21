@@ -45,7 +45,7 @@ const clearWishlist = async (userId: string, productId: string) => {
 };
 
 const getMyWishlist = async (userId: string) => {
-  const result = await WishlistModel.findOne({ user: userId }).populate('products','name images price discountedPrice weight');
+  const result = await WishlistModel.findOne({ user: userId }).populate('products');
   return result;
 };
 

@@ -22,7 +22,12 @@ router.post(
 
   OrderController.createCheckout
 );
-
+// Single product buy now route
+router.post(
+  '/buy-now',
+  auth(USER_ROLE.user),
+  OrderController.createSingleProductCheckout
+);
 // Get user's orders
 router.get('/my-orders', auth(USER_ROLE.user), OrderController.getMyOrders);
 

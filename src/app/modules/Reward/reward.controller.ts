@@ -1,3 +1,5 @@
+// c:\STA\El-afrik\src\app\modules\Reward\reward.controller.ts
+
 import { Request, Response } from 'express';
 import httpStatus from 'http-status';
 import catchAsync from '../../utils/catchAsync';
@@ -9,10 +11,9 @@ import { PointTransactionType, PointSource } from './reward.interface';
 // USER CONTROLLERS
 // ═══════════════════════════════════════════════════════════════════════
 
-// Get my reward summary
 const getMyRewardSummary = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user.userId;
-  
+
   const result = await RewardServices.getRewardSummary(userId);
 
   sendResponse(res, {
@@ -23,7 +24,6 @@ const getMyRewardSummary = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// Get my point history
 const getMyPointHistory = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user.userId;
   const { type, startDate, endDate, page, limit } = req.query;
@@ -44,7 +44,6 @@ const getMyPointHistory = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// Get detailed reward info
 const getMyDetailedReward = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user.userId;
 
@@ -58,7 +57,6 @@ const getMyDetailedReward = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// Get available points (for checkout)
 const getMyAvailablePoints = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user.userId;
 
@@ -68,7 +66,48 @@ const getMyAvailablePoints = catchAsync(async (req: Request, res: Response) => {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Available points retrieved successfully',
-    data: { availablePoints: points },
+    data: {
+      availablePoints: points,
+    },
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// CLAIM POINTS
+// ═══════════════════════════════════════════════════════════════════════
+
+const claimReward = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user.userId;
+  const { entryId } = req.body;
+
+  const result = await RewardServices.claimPoints({ userId, entryId });
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Reward claimed successfully',
+    data: {
+      currentBalance: result.currentBalance,
+      claimedPoints: result.claimedPoints,
+      pendingPoints: result.pendingPoints,
+    },
+  });
+});
+
+const claimAllRewards = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user.userId;
+
+  const result = await RewardServices.claimAllPoints(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'All rewards claimed successfully',
+    data: {
+      currentBalance: result.currentBalance,
+      claimedPoints: result.claimedPoints,
+      pendingPoints: result.pendingPoints,
+    },
   });
 });
 
@@ -76,7 +115,6 @@ const getMyAvailablePoints = catchAsync(async (req: Request, res: Response) => {
 // ADMIN CONTROLLERS
 // ═══════════════════════════════════════════════════════════════════════
 
-// Get any user's reward
 const getUserReward = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.params;
 
@@ -90,7 +128,6 @@ const getUserReward = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// Get user's reward summary
 const getUserRewardSummary = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.params;
 
@@ -104,7 +141,6 @@ const getUserRewardSummary = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// Manually add bonus points
 const addBonusPoints = catchAsync(async (req: Request, res: Response) => {
   const { userId, points, description, validityDays } = req.body;
 
@@ -136,7 +172,6 @@ const addBonusPoints = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// Manually deduct points (for corrections)
 const deductPoints = catchAsync(async (req: Request, res: Response) => {
   const { userId, points, reason } = req.body;
 
@@ -166,7 +201,6 @@ const deductPoints = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// Process expired points (cron job endpoint)
 const processExpiredPoints = catchAsync(async (req: Request, res: Response) => {
   const result = await RewardServices.processExpiredPointsForAllUsers();
 
@@ -179,12 +213,12 @@ const processExpiredPoints = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const RewardControllers = {
-  // User
   getMyRewardSummary,
   getMyPointHistory,
   getMyDetailedReward,
   getMyAvailablePoints,
-  // Admin
+  claimReward,
+  claimAllRewards,
   getUserReward,
   getUserRewardSummary,
   addBonusPoints,

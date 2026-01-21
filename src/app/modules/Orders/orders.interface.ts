@@ -1,27 +1,31 @@
-// modules/order/order.interface.ts
+// c:\STA\El-afrik\src\app\modules\Orders\orders.interface.ts
+
 import { Document, Types } from 'mongoose';
 
-// Order Status - 3 states only
 export enum OrderStatus {
   ONGOING = 'ongoing',
   DELIVERED = 'delivered',
   CANCELLED = 'cancelled',
 }
 
-// Order Type - Pickup or Delivery
 export enum OrderType {
   PICKUP = 'pickup',
   DELIVERY = 'delivery',
+  POINT_REDEMPTION = 'point_redemption',
 }
 
-// Payment Status
 export enum PaymentStatus {
   PENDING = 'pending',
   PAID = 'paid',
   FAILED = 'failed',
+  POINTS_PAID = 'points_paid',
 }
 
-// Order Item Interface
+export enum PaymentMethod {
+  CARD = 'card',
+  POINTS = 'points',
+}
+
 export interface IOrderItem {
   product: Types.ObjectId;
   name: string;
@@ -29,10 +33,10 @@ export interface IOrderItem {
   price: number;
   quantity: number;
   total: number;
-  points: number; // Points for this item (product.points * quantity)
+  points: number;
+  pointsCost?: number;
 }
 
-// Shipping Address Interface
 export interface IShippingAddress {
   name?: string;
   phone?: string;
@@ -44,69 +48,50 @@ export interface IShippingAddress {
   country?: string;
 }
 
-// Status History Entry
 export interface IStatusHistory {
   status: OrderStatus;
   timestamp: Date;
   note?: string;
 }
 
-// Main Order Interface
 export interface IOrder {
   user: Types.ObjectId;
   orderNumber: string;
   items: IOrderItem[];
-
-  // Pricing
   subtotal: number;
-  deliveryFee: number; // 0 for pickup, calculated for delivery
+  deliveryFee: number;
   discount: number;
   totalAmount: number;
-
-  // Points
-  totalPoints: number; // Total points earned from this order
-
-  // Order Info
+  totalPoints: number;
+  pointsUsed: number;
+  pointsValue: number;
   orderType: OrderType;
   orderStatus: OrderStatus;
   statusHistory: IStatusHistory[];
-
-  // Payment
   paymentStatus: PaymentStatus;
+  paymentMethod: PaymentMethod;
   stripeSessionId?: string;
   stripePaymentIntentId?: string;
-
-  // Customer Info
   customerName?: string;
   customerEmail: string;
   customerPhone?: string;
-
-  // For Delivery only
   shippingAddress?: IShippingAddress;
-
-  // For Pickup only
   pickupTime?: string;
-
-  // Timestamps
+  redemptionDeliveryType?: 'pickup' | 'delivery';
   paidAt?: Date;
   deliveredAt?: Date;
   cancelledAt?: Date;
-
-  // Points added to user
   pointsAdded: boolean;
-
   estimatedTime?: string;
   notes?: string;
 }
 
-// Document Interface
 export interface IOrderDocument extends IOrder, Document {
   _id: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
 
-// Create Order Input
 export interface ICreateOrderInput {
   userId: string;
   orderType: OrderType;
@@ -118,18 +103,29 @@ export interface ICreateOrderInput {
   notes?: string;
 }
 
-// Query Filters
+export interface IPointRedemptionInput {
+  userId: string;
+  items: {
+    productId: string;
+    quantity: number;
+  }[];
+  deliveryType: 'pickup' | 'delivery';
+  shippingAddress?: IShippingAddress;
+  pickupTime?: string;
+  notes?: string;
+}
+
 export interface IOrderFilters {
   user?: string;
   orderStatus?: OrderStatus;
   orderType?: OrderType;
   paymentStatus?: PaymentStatus;
+  paymentMethod?: PaymentMethod;
   search?: string;
   startDate?: string;
   endDate?: string;
 }
 
-// Pagination
 export interface IPaginationOptions {
   page: number;
   limit: number;

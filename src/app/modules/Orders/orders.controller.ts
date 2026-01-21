@@ -6,6 +6,7 @@ import sendResponse from '../../utils/sendResponse';
 import catchAsync from '../../utils/catchAsync';
 import { OrderStatus, OrderType } from './orders.interface';
 import { OrderService } from './orders.services';
+import AppError from '../../errors/AppError';
 
 
 
@@ -60,6 +61,36 @@ const createCheckout = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+const createSingleProductCheckout = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.userId;
+  const { productId, quantity, orderType, shippingAddress, pickupTime, notes } = req.body;
+
+  if (!productId || !quantity) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Product ID and quantity are required");
+  }
+
+  const result = await OrderService.createSingleProductCheckoutSession({
+    userId: userId.toString(),
+    productId,
+    quantity: Number(quantity),
+    orderType,
+    customerEmail: req.user?.email,
+    customerName: `${req.user?.firstName} ${req.user?.lastName}`,
+    customerPhone: req.user?.contact,
+    shippingAddress,
+    pickupTime,
+    notes,
+  });
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Checkout session created successfully',
+    data: result,
+  });
+});
+
 
 /**
  * Get My Orders
@@ -276,9 +307,11 @@ export const OrderController = {
   getOrderById,
   trackOrder,
   cancelOrder,
+    createSingleProductCheckout,
   // Admin
   getAllOrders,
   getOrderStats,
   updateOrderStatus,
   getOrderByIdAdmin,
+
 };
