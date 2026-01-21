@@ -22,6 +22,8 @@ import AppError from '../../errors/AppError';
 import { ProductModel } from '../product/product.model';
 import { OrderModel } from './orders.model';
 import { UserModel } from '../User/user.model';
+import { RewardServices } from '../Reward/reward.services';
+import { PointSource } from '../Reward/reward.interface';
 
 const stripe = new Stripe(config.stripe_secret_key as string);
 
@@ -198,24 +200,136 @@ const totalAmount = parseFloat((subtotal + totalDeliveryFee).toFixed(2));
 // ═══════════════════════════════════════════════════════════════════════
 // HANDLE PAYMENT SUCCESS (Called from Webhook)
 // ═══════════════════════════════════════════════════════════════════════
+// const handlePaymentSuccess = async (session: Stripe.Checkout.Session) => {
+//   const orderId = session.metadata?.orderId || session.client_reference_id;
+
+//   if (!orderId) {
+//     // console.error(' No order ID in session');
+//     return null;
+//   }
+
+//   const order = await OrderModel.findById(orderId);
+
+//   if (!order) {
+//     // console.error(' Order not found:', orderId);
+//     return null;
+//   }
+
+//   // Already processed
+//   if (order.paymentStatus === PaymentStatus.PAID) {
+//     // console.log('ℹ Order already processed:', order.orderNumber);
+//     return order;
+//   }
+
+//   const paymentIntentId =
+//     typeof session.payment_intent === 'string'
+//       ? session.payment_intent
+//       : session.payment_intent?.id;
+
+//   // Update order
+//   order.paymentStatus = PaymentStatus.PAID;
+//   order.stripePaymentIntentId = paymentIntentId;
+//   order.paidAt = new Date();
+
+//   // Update customer info from Stripe
+//   if (session.customer_details) {
+//     order.customerEmail = session.customer_details.email || order.customerEmail;
+//     order.customerPhone = session.customer_details.phone || order.customerPhone;
+//     order.customerName = session.customer_details.name || order.customerName;
+//   }
+
+// // Update shipping address (for delivery)
+// // Use type assertion because Stripe types don't include shipping_details directly
+// const shippingDetails = (session as any).shipping_details as {
+//   name?: string;
+//   address?: {
+//     line1?: string;
+//     line2?: string;
+//     city?: string;
+//     state?: string;
+//     postal_code?: string;
+//     country?: string;
+//   };
+// } | undefined;
+
+// if (shippingDetails?.address && order.orderType === OrderType.DELIVERY) {
+//   order.shippingAddress = {
+//     name: shippingDetails.name || undefined,
+//     line1: shippingDetails.address.line1 || undefined,
+//     line2: shippingDetails.address.line2 || undefined,
+//     city: shippingDetails.address.city || undefined,
+//     state: shippingDetails.address.state || undefined,
+//     postalCode: shippingDetails.address.postal_code || undefined,
+//     country: shippingDetails.address.country || undefined,
+//   };
+// }
+
+//   // Add to status history
+//   order.statusHistory.push({
+//     status: OrderStatus.ONGOING,
+//     timestamp: new Date(),
+//     note: `Payment successful. Intent: ${paymentIntentId}`,
+//   });
+
+//   await order.save();
+//   console.log(' Order payment updated:', order.orderNumber);
+
+//   // ═══════════════════════════════════════════════════════════════
+//   // 1. CLEAR USER'S CART
+//   // ═══════════════════════════════════════════════════════════════
+//   await CartModel.findOneAndDelete({ user: order.user });
+//   console.log(' Cart cleared for user:', order.user);
+
+//   // ═══════════════════════════════════════════════════════════════
+//   // 2. UPDATE PRODUCT STOCK
+//   // ═══════════════════════════════════════════════════════════════
+//   for (const item of order.items) {
+//     await ProductModel.findByIdAndUpdate(item.product, {
+//       $inc: { quantity: -item.quantity },
+//     });
+//     console.log(` Stock updated: ${item.name} -${item.quantity}`);
+//   }
+
+//   // ═══════════════════════════════════════════════════════════════
+//   // 3. ADD POINTS TO USER 
+//   // ═══════════════════════════════════════════════════════════════
+//   if (order.totalPoints > 0 && !order.pointsAdded) {
+//     const updatedUser = await UserModel.findByIdAndUpdate(
+//       order.user,
+//       { $inc: { point: order.totalPoints } },
+//       { new: true }
+//     );
+
+//     if (updatedUser) {
+//       order.pointsAdded = true;
+//       await order.save();
+//       console.log(` Points added: ${order.totalPoints} to user ${updatedUser.email}`);
+//       console.log(`   New total points: ${updatedUser.point}`);
+//     }
+//   }
+
+//   // ═══════════════════════════════════════════════════════════════
+//   // 4. SEND CONFIRMATION EMAIL
+//   // ═══════════════════════════════════════════════════════════════
+//   await sendOrderConfirmationEmail(order);
+
+//   return order;
+// };
 const handlePaymentSuccess = async (session: Stripe.Checkout.Session) => {
   const orderId = session.metadata?.orderId || session.client_reference_id;
 
   if (!orderId) {
-    // console.error(' No order ID in session');
     return null;
   }
 
   const order = await OrderModel.findById(orderId);
 
   if (!order) {
-    // console.error(' Order not found:', orderId);
     return null;
   }
 
   // Already processed
   if (order.paymentStatus === PaymentStatus.PAID) {
-    // console.log('ℹ Order already processed:', order.orderNumber);
     return order;
   }
 
@@ -236,31 +350,30 @@ const handlePaymentSuccess = async (session: Stripe.Checkout.Session) => {
     order.customerName = session.customer_details.name || order.customerName;
   }
 
-// Update shipping address (for delivery)
-// Use type assertion because Stripe types don't include shipping_details directly
-const shippingDetails = (session as any).shipping_details as {
-  name?: string;
-  address?: {
-    line1?: string;
-    line2?: string;
-    city?: string;
-    state?: string;
-    postal_code?: string;
-    country?: string;
-  };
-} | undefined;
+  // Update shipping address (for delivery)
+  const shippingDetails = (session as any).shipping_details as {
+    name?: string;
+    address?: {
+      line1?: string;
+      line2?: string;
+      city?: string;
+      state?: string;
+      postal_code?: string;
+      country?: string;
+    };
+  } | undefined;
 
-if (shippingDetails?.address && order.orderType === OrderType.DELIVERY) {
-  order.shippingAddress = {
-    name: shippingDetails.name || undefined,
-    line1: shippingDetails.address.line1 || undefined,
-    line2: shippingDetails.address.line2 || undefined,
-    city: shippingDetails.address.city || undefined,
-    state: shippingDetails.address.state || undefined,
-    postalCode: shippingDetails.address.postal_code || undefined,
-    country: shippingDetails.address.country || undefined,
-  };
-}
+  if (shippingDetails?.address && order.orderType === OrderType.DELIVERY) {
+    order.shippingAddress = {
+      name: shippingDetails.name || undefined,
+      line1: shippingDetails.address.line1 || undefined,
+      line2: shippingDetails.address.line2 || undefined,
+      city: shippingDetails.address.city || undefined,
+      state: shippingDetails.address.state || undefined,
+      postalCode: shippingDetails.address.postal_code || undefined,
+      country: shippingDetails.address.country || undefined,
+    };
+  }
 
   // Add to status history
   order.statusHistory.push({
@@ -270,13 +383,13 @@ if (shippingDetails?.address && order.orderType === OrderType.DELIVERY) {
   });
 
   await order.save();
-  console.log(' Order payment updated:', order.orderNumber);
+  // console.log(' Order payment updated:', order.orderNumber);
 
   // ═══════════════════════════════════════════════════════════════
   // 1. CLEAR USER'S CART
   // ═══════════════════════════════════════════════════════════════
   await CartModel.findOneAndDelete({ user: order.user });
-  console.log(' Cart cleared for user:', order.user);
+  // console.log(' Cart cleared for user:', order.user);
 
   // ═══════════════════════════════════════════════════════════════
   // 2. UPDATE PRODUCT STOCK
@@ -285,34 +398,41 @@ if (shippingDetails?.address && order.orderType === OrderType.DELIVERY) {
     await ProductModel.findByIdAndUpdate(item.product, {
       $inc: { quantity: -item.quantity },
     });
-    console.log(` Stock updated: ${item.name} -${item.quantity}`);
+    // console.log(` Stock updated: ${item.name} -${item.quantity}`);
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // 3. ADD POINTS TO USER 
+  // 3. ADD POINTS TO REWARD SYSTEM (ON PAYMENT COMPLETE!)
   // ═══════════════════════════════════════════════════════════════
   if (order.totalPoints > 0 && !order.pointsAdded) {
-    const updatedUser = await UserModel.findByIdAndUpdate(
-      order.user,
-      { $inc: { point: order.totalPoints } },
-      { new: true }
-    );
+    try {
+      // Add points to Reward system with validity (365 days)
+      await RewardServices.addPoints({
+        userId: order.user.toString(),
+        points: order.totalPoints,
+        source: PointSource.ORDER,
+        orderId: order._id.toString(),
+        orderNumber: order.orderNumber,
+        validityDays: 30, // 1 month validity
+        description: `Earned ${order.totalPoints} points from order ${order.orderNumber}`,
+      });
 
-    if (updatedUser) {
+      // Also update User's point field for quick access
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        order.user,
+        { $inc: { point: order.totalPoints } },
+        { new: true }
+      );
+
       order.pointsAdded = true;
       await order.save();
-      console.log(` Points added: ${order.totalPoints} to user ${updatedUser.email}`);
-      console.log(`   New total points: ${updatedUser.point}`);
+
+      // console.log(` Points added: ${order.totalPoints} to user ${updatedUser?.email}`);
+      // console.log(`   New total points: ${updatedUser?.point}`);
+    } catch (error) {
+      // console.error(' Failed to add points to Reward:', error);
     }
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // 4. SEND CONFIRMATION EMAIL
-  // ═══════════════════════════════════════════════════════════════
-  await sendOrderConfirmationEmail(order);
-
-  return order;
-};
+  }}
 
 // ═══════════════════════════════════════════════════════════════════════
 // HANDLE PAYMENT FAILURE

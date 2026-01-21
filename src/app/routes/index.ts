@@ -12,6 +12,7 @@ import { CartRoutes } from '../modules/Cart/cart.routes';
 import { OrderRoutes } from '../modules/Orders/orders.routes';
 import { WishlistRoutes } from '../modules/Wishlist/wishlist.routes';
 import { SpecialPromoRoutes } from '../modules/SpecialPromo/specialpromo.routes';
+import { RewardRoutes } from '../modules/Reward/reward.routes';
 
 
 
@@ -71,6 +72,10 @@ const moduleRoutes = [
   {
     path: '/promos',
     route:SpecialPromoRoutes
+  },
+  {
+    path: '/reward',
+    route:RewardRoutes
   },
  
 
