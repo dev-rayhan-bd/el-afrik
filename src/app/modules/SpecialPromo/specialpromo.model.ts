@@ -18,6 +18,11 @@ const SpecialPromoSchema = new Schema<ISpecialPromo>(
       type: Date,
       required: [true, 'Validity date is required'],
     },
+    type: {
+      type: String,
+      required: [true, 'Type is required'],
+        enum: ["holiday", "weekend", "limited"],
+    },
   },
   {
     timestamps: true,
