@@ -404,12 +404,7 @@ const handlePaymentSuccess = async (session: Stripe.Checkout.Session) => {
         description: `Earned ${order.totalPoints} points from order ${order.orderNumber}`,
       });
 
-      // Also update User's point field for quick access
-      const updatedUser = await UserModel.findByIdAndUpdate(
-        order.user,
-        { $inc: { point: order.totalPoints } },
-        { new: true }
-      );
+ 
 
       order.pointsAdded = true;
       await order.save();
