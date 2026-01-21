@@ -373,48 +373,73 @@ const handlePaymentSuccess = async (session: Stripe.Checkout.Session) => {
     });
   }
 
-  // if (order.totalPoints > 0 && !order.pointsAdded) {
-  //   try {
-  //     await RewardServices.addPendingPoints({
-  //       userId: order.user.toString(),
-  //       points: order.totalPoints,
-  //       source: PointSource.ORDER,
-  //       orderId: order._id.toString(),
-  //       orderNumber: order.orderNumber,
-  //       validityDays: 30,
-  //       description: `Earned ${order.totalPoints} points from order ${order.orderNumber}`,
-  //     });
-
-  //     order.pointsAdded = true;
-  //     await order.save();
-  //   } catch (error) {
-  //     console.error("Failed to add pending points:", error);
-  //   }
-  // }
-    if (order.totalPoints > 0 && !order.pointsAdded) {
-    try {
-      // Add points to Reward system with validity (365 days)
-      await RewardServices.addPoints({
-        userId: order.user.toString(),
-        points: order.totalPoints,
-        source: PointSource.ORDER,
-        orderId: order._id.toString(),
-        orderNumber: order.orderNumber,
-        validityDays: 30, // 1 month validity
-        description: `Earned ${order.totalPoints} points from order ${order.orderNumber}`,
-      });
+    // if (order.totalPoints > 0 && !order.pointsAdded) {
+    // try {
+    //   // Add points to Reward system with validity (365 days)
+    //   await RewardServices.addPoints({
+    //     userId: order.user.toString(),
+    //     points: order.totalPoints,
+    //     source: PointSource.ORDER,
+    //     orderId: order._id.toString(),
+    //     orderNumber: order.orderNumber,
+    //     validityDays: 30, // 1 month validity
+    //     description: `Earned ${order.totalPoints} points from order ${order.orderNumber}`,
+    //   });
 
  
 
-      order.pointsAdded = true;
-      await order.save();
+    //   order.pointsAdded = true;
+    //   await order.save();
 
-      // console.log(` Points added: ${order.totalPoints} to user ${updatedUser?.email}`);
-      // console.log(`   New total points: ${updatedUser?.point}`);
-    } catch (error) {
-      // console.error(' Failed to add points to Reward:', error);
-    }}
-  
+    // } catch (error) {
+    //   // console.error(' Failed to add points to Reward:', error);
+    // }}
+  if (order.totalPoints > 0 && !order.pointsAdded) {
+  try {
+    await RewardServices.addPoints({
+      userId: order.user.toString(),
+      points: order.totalPoints,
+      source: PointSource.ORDER,
+      orderId: order._id.toString(),
+      orderNumber: order.orderNumber,
+      validityDays: 365,
+      description: `Earned ${order.totalPoints} points from order ${order.orderNumber}`,
+    });
+
+
+    const user = await UserModel.findById(order.user);
+    
+    if (user) {
+
+      const currentPoints = user.point || 0; 
+      
+      let newTier = user.loyalityTier || 'Silver';
+
+
+      if (currentPoints >= 10500) {
+        newTier = 'Platinum';
+      } else if (currentPoints >= 8500) {
+        newTier = 'Gold';
+      } else if (currentPoints >= 3000) {
+        newTier = 'Silver';
+      }
+
+
+      if (newTier !== user.loyalityTier) {
+        await UserModel.findByIdAndUpdate(order.user, {
+          loyalityTier: newTier
+        });
+      }
+    }
+
+    
+    order.pointsAdded = true;
+    await order.save();
+
+  } catch (error) {
+    console.error('Points/Tier Update Error:', error);
+  }
+}
 
   await sendOrderConfirmationEmail(order);
 
