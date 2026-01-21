@@ -50,7 +50,7 @@ const ProductSchema: Schema<IProductDocument> = new Schema(
     },
     category: {
       type: Schema.Types.ObjectId,
-      ref: 'Category',
+      ref: 'Categories',
       required: [true, 'Category is required']
     },
     price: {

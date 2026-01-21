@@ -10,6 +10,7 @@ import httpStatus from 'http-status';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { ICategories } from './categories.interface';
 import CategoryModel from './categories.model';
+import { ProductModel } from '../product/product.model';
 
 
 const getAllActivitiesFromDB = async (query: Record<string, unknown>) => {
@@ -34,13 +35,23 @@ const addActivitiesIntoDB = async (payload: ICategories) => {
   return result;
 };
 const deleteActivitiesFromDB = async (id: string) => {
+
+  const isCategoryInUse = await ProductModel.findOne({ category: id });
+
+  if (isCategoryInUse) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST, 
+      'This category cannot be deleted because it is associated with existing products. Please delete or reassing the products first.'
+    );
+  }
+
   const category = await CategoryModel.findByIdAndDelete(id);
 
   if (!category) {
     throw new AppError(httpStatus.NOT_FOUND, 'Category not found!');
   }
 
-  return category; // return deleted user if needed
+  return category;
 };
 
 const updateActivitiesFromDB = async (id:string,payload:ICategories)=>{

@@ -15,6 +15,6 @@ const CategorySchema: Schema = new Schema<ICategories>(
 );
 
 // Export model
-const CategoryModel = mongoose.model<ICategories>('Category', CategorySchema);
+const CategoryModel = mongoose.model<ICategories>('Categories', CategorySchema);
 
 export default CategoryModel;
