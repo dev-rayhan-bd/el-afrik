@@ -18,6 +18,7 @@ const getAllProduct = catchAsync(async(req:Request,res:Response)=>{
  const userId = req.user?.userId; 
 
   const result = await ProductServices.getAllProductFromDB(req.query, userId);
+
   sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,

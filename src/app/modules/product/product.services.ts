@@ -36,8 +36,42 @@ import mongoose from "mongoose";
 //   const result = await ProductModel.findById(id);
 //   return result;
 // };
+// const getAllProductFromDB = async (query: Record<string, unknown>, userId?: string) => {
+//   const queryBuilder = new QueryBuilder(ProductModel.find(), query);
+
+//   queryBuilder.search(["name"]).filter().paginate();
+  
+//   const result = await queryBuilder.modelQuery;
+//   const meta = await queryBuilder.countTotal();
+
+//   let wishlistProductIds: string[] = [];
+//   if (userId) {
+//     const wishlist = await WishlistModel.findOne({ user: userId });
+//     if (wishlist) {
+//       wishlistProductIds = wishlist.products.map((id) => id.toString());
+//     }
+//   }
+
+//   const modifiedResult = result.map((product) => {
+//     const productObj = product.toObject();
+//     return {
+//       ...productObj,
+//       isFavourite: wishlistProductIds.includes(product._id.toString()),
+//     };
+//   });
+
+//   return { meta, result: modifiedResult };
+// };
+// c:\STA\El-afrik\src\app\modules\product\product.services.ts
+
 const getAllProductFromDB = async (query: Record<string, unknown>, userId?: string) => {
-  const queryBuilder = new QueryBuilder(ProductModel.find(), query);
+
+  if (query.category) {
+    query.category = new mongoose.Types.ObjectId(query.category as string);
+  }
+
+  const queryBuilder = new QueryBuilder(ProductModel.find().populate('category'), query);
+
 
   queryBuilder.search(["name"]).filter().paginate();
   
@@ -62,7 +96,6 @@ const getAllProductFromDB = async (query: Record<string, unknown>, userId?: stri
 
   return { meta, result: modifiedResult };
 };
-
 const getSingleProductFromDB = async (id: string, userId?: string) => {
   const product = await ProductModel.findById(id);
   if (!product) {
