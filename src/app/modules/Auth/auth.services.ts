@@ -12,6 +12,7 @@ import { UserModel } from "../User/user.model";
 import { generateReferCode } from "../../utils/generateReferCode";
 import { sendMail } from "../../utils/sendMail";
 import config from "../../config";
+import { sendNotificationToAdmins } from "../../utils/sendNotification";
 
 // register new user
 const registeredUserIntoDB = async (payload: TUser) => {
@@ -92,6 +93,11 @@ export const verifyOTPForRegistration = async (email: string, otp: string) => {
     jwtPayload,
     config.jwt_refresh_secret as string,
     config.jwt_refresh_expires_in as string
+  );
+    await sendNotificationToAdmins(
+    'New User Registered! 👤',
+    `${user.fullName} has just joined El-afrik.`,
+    'general'
   );
   return {
     status: httpStatus.OK,
