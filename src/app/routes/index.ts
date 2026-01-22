@@ -15,6 +15,7 @@ import { SpecialPromoRoutes } from '../modules/SpecialPromo/specialpromo.routes'
 import { RewardRoutes } from '../modules/Reward/reward.routes';
 import { PointRedemptionRoutes } from '../modules/PointRedemtion/pointredemtion.routes';
 import { CateringRoutes } from '../modules/CateringBooking/cateringBooking.routes';
+import { BirthdayRoutes } from '../modules/Birthday/birthday.routes';
 
 
 
@@ -87,7 +88,10 @@ const moduleRoutes = [
     path: '/catering',
     route:CateringRoutes
   },
- 
+ {
+    path: '/birthday',
+    route: BirthdayRoutes
+  },
 
 ];
 

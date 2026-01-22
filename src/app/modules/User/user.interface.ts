@@ -27,7 +27,9 @@ export interface TUser {
   lastView: string;
   createdAt?: Date;
   updatedAt?: Date;
-   isOtpVerified:boolean
+   isOtpVerified:boolean;
+    lastBirthdayRewardYear?: number;
+  canClaimBirthdayReward: boolean;
 }
 
 export interface IUserMethods {

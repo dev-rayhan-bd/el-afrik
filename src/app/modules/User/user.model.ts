@@ -47,6 +47,8 @@ const userSchema = new Schema<TUser, User, IUserMethods>(
     isOtpVerified: { type: Boolean, default: false },
     lastView:{ type: String },
     passwordChangedAt: { type: Date },
+    lastBirthdayRewardYear: { type: Number, default: 0 },
+    canClaimBirthdayReward: { type: Boolean, default: false },
   },
   {
     timestamps: true,
