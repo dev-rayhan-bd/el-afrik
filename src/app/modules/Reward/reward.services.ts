@@ -206,5 +206,6 @@ export const RewardServices = {
   redeemPoints,
   getRewardSummary,
   getPointHistory,
-  getAvailablePoints: async (userId: string) => (await getOrCreateReward(userId)).currentBalance,refundPoints
+  getAvailablePoints: async (userId: string) => (await getOrCreateReward(userId)).currentBalance,refundPoints,
+  checkAndExpirePoints
 };
