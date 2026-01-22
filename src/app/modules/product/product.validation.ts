@@ -83,5 +83,7 @@ export const updateProductSchema = z.object({
       description: z.string().trim().min(1).max(2000).optional(),
       promo: z.string().trim().min(1).optional(),
       isFavourite: z.boolean().optional(),
+      isRedem: z.boolean().optional(),
+      isVip: z.boolean().optional(),
   
 });

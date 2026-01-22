@@ -128,6 +128,14 @@ const ProductSchema: Schema<IProductDocument> = new Schema(
     isFeatured: {
       type: Boolean,
       default: false
+    },
+    isRedem: {
+      type: Boolean,
+      default: false
+    },
+    isVip: {
+      type: Boolean,
+      default: false
     }
   },
   {

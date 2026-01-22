@@ -6,19 +6,22 @@ import { upload } from '../../middleware/multer';
 
 const router = Router();
 
-router.post('/add-package',
-     upload.single('image'),
-      (req: Request, res: Response, next: NextFunction) => {
-        // console.log("req data--->",req.body.body);
-        if (req.body) {
-          req.body = JSON.parse(req.body.body);
-        }
-        next();
-      },
-    auth(USER_ROLE.superAdmin), CateringController.addPackage);
+// Helper to parse JSON from Form-Data
+const parseBody = (req: Request, res: Response, next: NextFunction) => {
+  if (req.body.body) {
+    req.body = JSON.parse(req.body.body);
+  }
+  next();
+};
+
+// Admin Routes
+router.post('/add-package', auth(USER_ROLE.superAdmin), upload.single('image'), parseBody, CateringController.addPackage);
+router.patch('/edit-package/:id', auth(USER_ROLE.superAdmin), upload.single('image'), parseBody, CateringController.editPackage);
+router.delete('/delete-package/:id', auth(USER_ROLE.superAdmin), CateringController.deletePackage);
+router.get('/admin/bookings', auth(USER_ROLE.superAdmin, USER_ROLE.admin), CateringController.getAllBookings);
+
+// User Routes
 router.get('/packages', CateringController.getPackages);
 router.post('/reserve', auth(USER_ROLE.user), CateringController.createReservation);
-router.post('/confirm-payment', CateringController.confirmPayment);
-router.get('/admin/bookings', auth(USER_ROLE.superAdmin, USER_ROLE.admin), CateringController.getAllBookings);
 
 export const CateringRoutes = router;

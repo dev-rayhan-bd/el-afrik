@@ -6,34 +6,53 @@ import { CateringService } from './cateringBooking.services';
 import uploadImage from '../../middleware/upload';
 
 const addPackage = catchAsync(async (req: Request, res: Response) => {
-       const userPayload = req.body;
-    // console.log("userpayload--->",userPayload);
-       if (req.file) {
-          const imageUrl = await uploadImage(req);
-          userPayload.image = imageUrl;
-        }
-  const result = await CateringService.addPackageIntoDB(userPayload);
+  const payload = req.body;
+  if (req.file) {
+    payload.image = await uploadImage(req);
+  }
+  const result = await CateringService.addPackageIntoDB(payload);
   sendResponse(res, { statusCode: httpStatus.CREATED, success: true, message: 'Package added', data: result });
 });
 
+const editPackage = catchAsync(async (req: Request, res: Response) => {
+  const payload = req.body;
+  if (req.file) {
+    payload.image = await uploadImage(req);
+  }
+  const result = await CateringService.updatePackageInDB(req.params.id, payload);
+  sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Package updated', data: result });
+});
+
+const deletePackage = catchAsync(async (req: Request, res: Response) => {
+  const result = await CateringService.deletePackageFromDB(req.params.id);
+  sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Package deleted', data: result });
+});
+
 const getPackages = catchAsync(async (req: Request, res: Response) => {
-  const result = await CateringService.getAllPackagesFromDB();
+
+  const result = await CateringService.getAllPackagesFromDB(req.query);
   sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Packages retrieved', data: result });
 });
 
 const createReservation = catchAsync(async (req: Request, res: Response) => {
-  const result = await CateringService.createCheckoutSession(req.user.userId, { ...req.body, customerEmail: req.user.email });
+  const result = await CateringService.createCheckoutSession(req.user.userId, { 
+    ...req.body, 
+    customerEmail: req.user.email 
+  });
   sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Payment URL generated', data: result });
 });
 
-const confirmPayment = catchAsync(async (req: Request, res: Response) => {
-  const result = await CateringService.confirmPaymentInDB(req.body.sessionId);
-  sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Booking confirmed', data: result });
-});
-
 const getAllBookings = catchAsync(async (req: Request, res: Response) => {
-  const result = await CateringService.getAllBookings();
+
+  const result = await CateringService.getAllBookings(req.query);
   sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Bookings retrieved', data: result });
 });
 
-export const CateringController = { addPackage, getPackages, createReservation, confirmPayment, getAllBookings };
+export const CateringController = { 
+  addPackage, 
+  editPackage, 
+  deletePackage, 
+  getPackages, 
+  createReservation, 
+  getAllBookings 
+};

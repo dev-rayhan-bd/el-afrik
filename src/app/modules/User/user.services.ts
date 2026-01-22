@@ -76,6 +76,23 @@ const getAllUserFromDB = async (query: Record<string, unknown>) => {
 
   return { meta, result };
 };
+const blockUserFromDB = async (id: string, status: string) => {
+
+  const user = await UserModel.findById(id);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, 'User not found!');
+  }
+
+
+  const result = await UserModel.findByIdAndUpdate(
+    id,
+    { status },
+    { new: true, runValidators: true }
+  );
+
+  return result;
+};
+
 
 
 export const UserServices = {
@@ -83,6 +100,6 @@ export const UserServices = {
   getDashboardStatsFromDB,
   getMyProfileFromDB,
   deletePrifileFromDB,
-  getAllUserFromDB,getSingleProfileFromDB,deleteUserFromDB
+  getAllUserFromDB,getSingleProfileFromDB,deleteUserFromDB,blockUserFromDB
 
 };

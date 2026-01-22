@@ -17,8 +17,8 @@ export interface ICateringPackage {
   description: string;
   pricePerPerson: number;
   minGuests: number;
-   menu: string[];
-   image:string
+  menu: string[];
+  image: string;
 }
 
 export interface ICateringBooking {

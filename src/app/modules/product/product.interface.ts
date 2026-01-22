@@ -32,6 +32,9 @@ export interface IProduct {
   readyTime?: string;
   isFavourite: boolean;
   isFeatured?: boolean;
+  isRedem?: boolean;
+  isVip?: boolean;
+
 }
 
 export interface IProductDocument extends IProduct, Document {

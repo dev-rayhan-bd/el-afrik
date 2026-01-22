@@ -70,5 +70,9 @@ router.delete('/delete-user/:id',auth(USER_ROLE.superAdmin,USER_ROLE.admin),User
 
 
 router.get('/dashboard/stats/:year',  auth(USER_ROLE.superAdmin,USER_ROLE.admin), UserControllers.getDashboardStats);
-
+router.patch(
+  '/block-user/:id',
+  auth(USER_ROLE.superAdmin, USER_ROLE.admin),
+  UserControllers.toggleUserBlock
+);
 export const UserRoutes = router;

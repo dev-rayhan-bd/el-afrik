@@ -167,7 +167,9 @@ const loginUser = async (payload: TLoginUser) => {
       "OTP verification is required before logging in!"
     );
   }
-
+if (user.status === 'blocked') {
+  throw new AppError(httpStatus.FORBIDDEN, 'Your account is blocked by admin!');
+}
   const jwtPayload = {
     userId: user._id!.toString(),
     role: user?.role,

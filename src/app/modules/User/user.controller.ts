@@ -120,7 +120,19 @@ const {id} = req.params
   });
 })
 
+const toggleUserBlock = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { status } = req.body; 
 
+  const result = await UserServices.blockUserFromDB(id, status);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: `User is now ${status}`,
+    data: result,
+  });
+});
 
 
 
@@ -132,6 +144,7 @@ getMyProfile,
 deleteProfile,
 getAllUser,
 getSingleProfile,
-deleteUser
+deleteUser,
+toggleUserBlock
 
 };

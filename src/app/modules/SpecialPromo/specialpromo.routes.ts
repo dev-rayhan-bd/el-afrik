@@ -7,7 +7,7 @@ import { SpecialPromoControllers } from './specialpromo.controller';
 const router = express.Router();
 
 // Public can view active promos
-router.get('/all',  auth(USER_ROLE.user), SpecialPromoControllers.getAllSpecialPromos);
+router.get('/all',  auth(USER_ROLE.user,USER_ROLE.superAdmin), SpecialPromoControllers.getAllSpecialPromos);
 
 // Only SuperAdmin/Admin can manage promos
 router.post(
