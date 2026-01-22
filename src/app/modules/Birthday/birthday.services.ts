@@ -5,7 +5,6 @@ import { ProductModel } from '../product/product.model';
 import { OrderModel } from '../Orders/orders.model';
 import { OrderStatus, OrderType, PaymentMethod, PaymentStatus } from '../Orders/orders.interface';
 
-// ১. পপআপ দেখানোর জন্য চেক
 const checkEligibility = async (userId: string) => {
   const user = await UserModel.findById(userId);
   if (!user) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
@@ -17,13 +16,13 @@ const checkEligibility = async (userId: string) => {
   const isBirthday = today.getMonth() === dob.getMonth() && today.getDate() === dob.getDate();
   const alreadyFinishedClaim = user.lastBirthdayRewardYear === currentYear;
 
-  // পপআপ দেখাবে যদি আজ জন্মদিন হয় এবং সে এখনো ক্লেইম প্রসেস শুরু বা শেষ না করে থাকে
+
   const showPopup = isBirthday && !alreadyFinishedClaim && !user.canClaimBirthdayReward;
 
   return { isBirthday, canClaim: user.canClaimBirthdayReward, showPopup };
 };
 
-// ২. পপআপের 'Claim' বাটন ক্লিক করলে স্ট্যাটাস ট্রু করা
+
 const activateClaimStatus = async (userId: string) => {
   const eligibility = await checkEligibility(userId);
   if (!eligibility.isBirthday) throw new AppError(httpStatus.BAD_REQUEST, "Today is not your birthday!");
@@ -31,7 +30,6 @@ const activateClaimStatus = async (userId: string) => {
   return await UserModel.findByIdAndUpdate(userId, { canClaimBirthdayReward: true }, { new: true });
 };
 
-// ৩. ফাইনাল অর্ডার (পিকআপ এবং ডেজার্ট ভ্যালিডেশন সহ)
 const claimFreeOrder = async (userId: string, productId: string, pickupTime: string) => {
   const user = await UserModel.findById(userId);
   if (!user?.canClaimBirthdayReward) {
@@ -46,7 +44,6 @@ const claimFreeOrder = async (userId: string, productId: string, pickupTime: str
     throw new AppError(httpStatus.BAD_REQUEST, "Birthday gift is only available for Desserts!");
   }
 
-  // অর্ডার তৈরি করার সময় subtotal: 0 যোগ করা হয়েছে
   const order = await OrderModel.create({
     user: userId,
     orderType: OrderType.PICKUP,
@@ -58,9 +55,9 @@ const claimFreeOrder = async (userId: string, productId: string, pickupTime: str
       total: 0,
       points: 0
     }],
-    subtotal: 0,      // এই ফিল্ডটি মিসিং ছিল, এখন অ্যাড করা হলো
+    subtotal: 0,      
     totalAmount: 0,
-    deliveryFee: 0,   // সেফটির জন্য এটিও ০ করে দিন
+    deliveryFee: 0,  
     paymentStatus: PaymentStatus.PAID,
     paymentMethod: PaymentMethod.POINTS,
     orderStatus: OrderStatus.ONGOING,
@@ -70,7 +67,7 @@ const claimFreeOrder = async (userId: string, productId: string, pickupTime: str
     notes: "Birthday Free Dessert Reward"
   });
 
-  // সফল হওয়ার পর রিসেট করা
+
   await UserModel.findByIdAndUpdate(userId, { 
     canClaimBirthdayReward: false,
     lastBirthdayClaimYear: new Date().getFullYear()
