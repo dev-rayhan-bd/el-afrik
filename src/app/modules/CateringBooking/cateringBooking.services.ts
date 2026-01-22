@@ -6,6 +6,7 @@ import AppError from '../../errors/AppError';
 import httpStatus from 'http-status';
 import sendEmail from '../../utils/sendEmail';
 import QueryBuilder from '../../builder/QueryBuilder';
+import { sendNotification, sendNotificationToAdmins } from '../../utils/sendNotification';
 
 const stripe = new Stripe(config.stripe_secret_key as string);
 
@@ -112,6 +113,19 @@ const handlePaymentSuccess = async (bookingId: string) => {
       </div>
     `
   });
+
+ await sendNotification(
+    (booking.user as any)._id.toString(),
+    'Catering Reservation Confirmed! 🍱',
+    `Your reservation for ${packageInfo.name} on ${new Date(booking.eventDate).toLocaleDateString()} is successful. Reference: #${booking._id.toString().slice(-6)}`,
+    'catering'
+  );
+
+  await sendNotificationToAdmins(
+  'New Catering Booking! 🍱',
+  `A new catering request has been received for ${new Date(booking.eventDate).toLocaleDateString()}.`,
+  'catering'
+);
 };
 const getAllBookings = async (query: Record<string, unknown>) => {
   const bookingQuery = new QueryBuilder(

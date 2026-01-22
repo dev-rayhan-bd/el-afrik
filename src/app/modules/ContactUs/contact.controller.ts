@@ -5,6 +5,7 @@ import httpStatus from 'http-status';
 
 import AppError from '../../errors/AppError';
 import config from '../../config';
+import { sendNotificationToAdmins } from '../../utils/sendNotification';
 
 const sendMessage = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -50,6 +51,11 @@ ${message}
       success: true,
       message: 'Message sent successfully.',
     });
+    await sendNotificationToAdmins(
+  'New Contact Inquiry 📧',
+  `You have a new message from ${email}.`,
+  'general'
+);
   } catch (error: any) {
     console.error('Error sending email:', error);
     throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, 'Error sending email.');

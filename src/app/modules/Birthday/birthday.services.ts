@@ -4,6 +4,7 @@ import { UserModel } from '../User/user.model';
 import { ProductModel } from '../product/product.model';
 import { OrderModel } from '../Orders/orders.model';
 import { OrderStatus, OrderType, PaymentMethod, PaymentStatus } from '../Orders/orders.interface';
+import { sendNotification, sendNotificationToAdmins } from '../../utils/sendNotification';
 
 const checkEligibility = async (userId: string) => {
   const user = await UserModel.findById(userId);
@@ -72,7 +73,17 @@ const claimFreeOrder = async (userId: string, productId: string, pickupTime: str
     canClaimBirthdayReward: false,
     lastBirthdayClaimYear: new Date().getFullYear()
   });
-
+  await sendNotification(
+    userId,
+    'Birthday Gift Confirmed! 🎂',
+    `Your free dessert order is placed. Please pick it up at ${pickupTime}.`,
+    'birthday'
+  );
+  await sendNotificationToAdmins(
+  'Birthday Gift Claimed 🎂',
+  `${user?.firstName} claimed a free birthday dessert!`,
+  'birthday'
+);
   return order;
 };
 

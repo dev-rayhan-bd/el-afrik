@@ -25,6 +25,7 @@ import { OrderModel } from "./orders.model";
 import { UserModel } from "../User/user.model";
 import { RewardServices } from "../Reward/reward.services";
 import { PointSource } from "../Reward/reward.interface";
+import { sendNotification, sendNotificationToAdmins } from "../../utils/sendNotification";
 
 const stripe = new Stripe(config.stripe_secret_key as string);
 
@@ -373,27 +374,7 @@ const handlePaymentSuccess = async (session: Stripe.Checkout.Session) => {
     });
   }
 
-    // if (order.totalPoints > 0 && !order.pointsAdded) {
-    // try {
-    //   // Add points to Reward system with validity (365 days)
-    //   await RewardServices.addPoints({
-    //     userId: order.user.toString(),
-    //     points: order.totalPoints,
-    //     source: PointSource.ORDER,
-    //     orderId: order._id.toString(),
-    //     orderNumber: order.orderNumber,
-    //     validityDays: 30, // 1 month validity
-    //     description: `Earned ${order.totalPoints} points from order ${order.orderNumber}`,
-    //   });
 
- 
-
-    //   order.pointsAdded = true;
-    //   await order.save();
-
-    // } catch (error) {
-    //   // console.error(' Failed to add points to Reward:', error);
-    // }}
   if (order.totalPoints > 0 && !order.pointsAdded) {
   try {
     await RewardServices.addPoints({
@@ -443,6 +424,19 @@ const handlePaymentSuccess = async (session: Stripe.Checkout.Session) => {
 
   await sendOrderConfirmationEmail(order);
 
+await sendNotification(
+  order.user.toString(),
+  'Order Confirmed! 🛍️',
+  `Your order ${order.orderNumber} has been placed successfully.`,
+  'order'
+);
+
+// admin
+await sendNotificationToAdmins(
+  'New Order Received! 🛒',
+  `A new order ${order.orderNumber} has been placed by ${order.customerName}.`,
+  'order'
+);
   return order;
 };
 

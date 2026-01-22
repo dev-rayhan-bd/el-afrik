@@ -16,6 +16,7 @@ import { RewardRoutes } from '../modules/Reward/reward.routes';
 import { PointRedemptionRoutes } from '../modules/PointRedemtion/pointredemtion.routes';
 import { CateringRoutes } from '../modules/CateringBooking/cateringBooking.routes';
 import { BirthdayRoutes } from '../modules/Birthday/birthday.routes';
+import { NotificationRoutes } from '../modules/Notification/notification.routes';
 
 
 
@@ -92,7 +93,10 @@ const moduleRoutes = [
     path: '/birthday',
     route: BirthdayRoutes
   },
-
+  {
+    path: '/notification',
+    route: NotificationRoutes
+  },
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
