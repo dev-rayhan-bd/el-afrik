@@ -6,7 +6,7 @@ import config from '../config';
 
 // Updated MailOptions interface with html support
 interface MailOptions {
-  from: string;
+  from?: string;
   to: string;
   subject: string;
   text?: string;   // Made optional

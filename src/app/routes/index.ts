@@ -14,6 +14,7 @@ import { WishlistRoutes } from '../modules/Wishlist/wishlist.routes';
 import { SpecialPromoRoutes } from '../modules/SpecialPromo/specialpromo.routes';
 import { RewardRoutes } from '../modules/Reward/reward.routes';
 import { PointRedemptionRoutes } from '../modules/PointRedemtion/pointredemtion.routes';
+import { CateringRoutes } from '../modules/CateringBooking/cateringBooking.routes';
 
 
 
@@ -81,6 +82,10 @@ const moduleRoutes = [
   {
     path: '/redeem',
     route:PointRedemptionRoutes
+  },
+  {
+    path: '/catering',
+    route:CateringRoutes
   },
  
 
