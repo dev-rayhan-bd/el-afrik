@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import config from '../../config';
+import PDFDocument from 'pdfkit';
 import { CateringBookingModel, CateringPackageModel } from './cateringBooking.model';
 import { ICateringPackage, CateringPaymentStatus, BookingStatus } from './cateringBooking.interface';
 import AppError from '../../errors/AppError';
@@ -7,6 +8,7 @@ import httpStatus from 'http-status';
 import sendEmail from '../../utils/sendEmail';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { sendNotification, sendNotificationToAdmins } from '../../utils/sendNotification';
+import { UserModel } from '../User/user.model';
 
 const stripe = new Stripe(config.stripe_secret_key as string);
 
@@ -59,7 +61,10 @@ const createCheckoutSession = async (userId: string, payload: any) => {
     contactNumber,
     notes,
   });
+const user = await UserModel.findById(userId);
+if (!user) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
 
+const fullName = user.fullName || `${user.firstName} ${user.lastName}`;
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     mode: 'payment',
@@ -72,7 +77,7 @@ const createCheckoutSession = async (userId: string, payload: any) => {
       },
       quantity: 1,
     }],
-    metadata: { bookingId: booking._id.toString(), type: 'catering' },
+    metadata: { bookingId: booking._id.toString(),   customerName: fullName ,type: 'catering' },
     success_url: `${config.frontend_url}/catering/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${config.frontend_url}/catering/cancel`,
   });
@@ -140,6 +145,69 @@ const getAllBookings = async (query: Record<string, unknown>) => {
   const meta = await bookingQuery.countTotal();
   return { meta, result };
 };
+
+const generateInvoicePDF = async (bookingId: string) => {
+  const booking = await CateringBookingModel.findById(bookingId).populate('user package');
+  
+  if (!booking) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Booking not found');
+  }
+
+  const doc = new PDFDocument({ margin: 50 });
+
+  // PDF Header
+  doc.fillColor('#444444').fontSize(20).text('EL-AFRIK RESTAURANT', 110, 57);
+  doc.fontSize(10).text('Catering Service Invoice', 110, 80);
+  doc.moveDown();
+
+  // Booking Info
+  doc.fontSize(12).text(`Invoice No: INV-${booking._id.toString().slice(-6)}`, 50, 120);
+  doc.text(`Date: ${new Date().toLocaleDateString()}`, 50, 135);
+  doc.text(`Status: ${booking.paymentStatus.toUpperCase()}`, 50, 150);
+
+  // Customer Details
+  doc.fontSize(14).text('Customer Details', 50, 180);
+  doc.fontSize(10).text(`Name: ${(booking.user as any).fullName || (booking.user as any).firstName}`, 50, 200);
+  doc.text(`Email: ${(booking.user as any).email}`, 50, 215);
+  doc.text(`Contact: ${booking.contactNumber}`, 50, 230);
+  doc.text(`Venue: ${booking.venueAddress}`, 50, 245);
+
+  // Event Details
+  doc.fontSize(14).text('Event Details', 300, 180);
+  doc.fontSize(10).text(`Package: ${(booking.package as any).name}`, 300, 200);
+  doc.text(`Event Date: ${new Date(booking.eventDate).toLocaleDateString()}`, 300, 215);
+  doc.text(`Total Guests: ${booking.guestCount}`, 300, 230);
+
+  // Table Header
+  const tableTop = 300;
+  doc.fontSize(12).text('Description', 50, tableTop);
+  doc.text('Qty', 350, tableTop);
+  doc.text('Price/Person', 400, tableTop);
+  doc.text('Total', 500, tableTop);
+  doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).stroke();
+
+  // Table Content
+  const itemRowTop = tableTop + 30;
+  doc.fontSize(10).text((booking.package as any).name, 50, itemRowTop);
+  doc.text(booking.guestCount.toString(), 350, itemRowTop);
+  doc.text(`$${(booking.package as any).pricePerPerson}`, 400, itemRowTop);
+  doc.text(`$${booking.totalPrice}`, 500, itemRowTop);
+
+  // Total
+  doc.moveTo(50, itemRowTop + 20).lineTo(550, itemRowTop + 20).stroke();
+  doc.fontSize(14).text(`Grand Total: $${booking.totalPrice}`, 400, itemRowTop + 40);
+
+  // Footer
+  doc.fontSize(10).text('Thank you for choosing El-Afrik Catering Service!', 50, 650, { align: 'center' });
+
+  doc.end();
+  return doc;
+};
+
+
+
+
+
 export const CateringService = {
   addPackageIntoDB,
   updatePackageInDB,
@@ -147,5 +215,6 @@ export const CateringService = {
   getAllPackagesFromDB,
   createCheckoutSession,
   handlePaymentSuccess,
-  getAllBookings
+  getAllBookings,
+  generateInvoicePDF
 };

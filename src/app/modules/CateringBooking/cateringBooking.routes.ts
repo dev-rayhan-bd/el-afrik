@@ -19,7 +19,11 @@ router.post('/add-package', auth(USER_ROLE.superAdmin), upload.single('image'), 
 router.patch('/edit-package/:id', auth(USER_ROLE.superAdmin), upload.single('image'), parseBody, CateringController.editPackage);
 router.delete('/delete-package/:id', auth(USER_ROLE.superAdmin), CateringController.deletePackage);
 router.get('/admin/bookings', auth(USER_ROLE.superAdmin, USER_ROLE.admin), CateringController.getAllBookings);
-
+router.get(
+  '/invoice/:id', 
+  auth(USER_ROLE.superAdmin, USER_ROLE.admin), 
+  CateringController.downloadInvoice
+);
 // User Routes
 router.get('/packages', CateringController.getPackages);
 router.post('/reserve', auth(USER_ROLE.user), CateringController.createReservation);

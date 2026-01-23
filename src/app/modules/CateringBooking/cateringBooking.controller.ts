@@ -48,11 +48,24 @@ const getAllBookings = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Bookings retrieved', data: result });
 });
 
+const downloadInvoice = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const pdfDoc = await CateringService.generateInvoicePDF(id);
+
+  // Set Response Headers for PDF Download
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename=invoice-${id}.pdf`);
+
+  // Pipe the PDF document directly to the response
+  pdfDoc.pipe(res);
+});
+
 export const CateringController = { 
   addPackage, 
   editPackage, 
   deletePackage, 
   getPackages, 
   createReservation, 
-  getAllBookings 
+  getAllBookings ,
+  downloadInvoice
 };

@@ -71,6 +71,10 @@ const createCheckoutSession = async (input: ICreateOrderInput) => {
       );
     }
 
+
+
+
+
     const unitPrice = product.discountedPrice || product.price;
     const itemTotal = parseFloat((unitPrice * cartItem.quantity).toFixed(2));
     const itemPoints = (product.points || 0) * cartItem.quantity;
@@ -104,6 +108,11 @@ const createCheckoutSession = async (input: ICreateOrderInput) => {
     });
   }
 
+const user = await UserModel.findById(userId);
+if (!user) throw new AppError(httpStatus.NOT_FOUND, "User not found");
+
+const fullName = user.fullName || `${user.firstName} ${user.lastName}`;
+const contact = user.contact;
   const totalAmount = parseFloat((subtotal + totalDeliveryFee).toFixed(2));
 
   const order = await OrderModel.create({
@@ -122,8 +131,8 @@ const createCheckoutSession = async (input: ICreateOrderInput) => {
     paymentStatus: PaymentStatus.PENDING,
     paymentMethod: PaymentMethod.CARD,
     customerEmail,
-    customerName: input.customerName,
-    customerPhone: input.customerPhone,
+    customerName:fullName,
+    customerPhone:contact,
     shippingAddress:
       orderType === OrderType.DELIVERY ? shippingAddress : undefined,
     pickupTime: orderType === OrderType.PICKUP ? pickupTime : undefined,
@@ -220,8 +229,12 @@ const createSingleProductCheckoutSession = async (input: {
 
   const unitPrice = product.discountedPrice || product.price;
 
+const user = await UserModel.findById(userId);
+if (!user) throw new AppError(httpStatus.NOT_FOUND, "User not found");
 
+const fullName = user.fullName || `${user.firstName} ${user.lastName}`;
 
+const contact = user.contact;
   const subtotal = parseFloat((unitPrice * quantity).toFixed(2));
   const totalPoints = (product.points || 0) * quantity;
   const deliveryFee = orderType === OrderType.DELIVERY ? (product.deliveryFee || 0) * quantity : 0;
@@ -249,8 +262,8 @@ const createSingleProductCheckoutSession = async (input: {
     paymentStatus: PaymentStatus.PENDING,
     paymentMethod: PaymentMethod.CARD,
     customerEmail,
-    customerName: input.customerName,
-    customerPhone: input.customerPhone,
+    customerName:fullName,
+    customerPhone:contact,
     shippingAddress: orderType === OrderType.DELIVERY ? shippingAddress : undefined,
     pickupTime: orderType === OrderType.PICKUP ? pickupTime : undefined,
     notes,
@@ -349,6 +362,11 @@ const createSpecialPromoCheckoutSession = async (input: {
   }
   
   unitPrice = Math.max(unitPrice, 0);
+const user = await UserModel.findById(userId);
+if (!user) throw new AppError(httpStatus.NOT_FOUND, "User not found");
+
+const fullName = user.fullName || `${user.firstName} ${user.lastName}`;
+const contact = user.contact;
 
   const subtotal = parseFloat((unitPrice * quantity).toFixed(2));
   const totalPoints = (product.points || 0) * quantity;
@@ -377,8 +395,8 @@ const createSpecialPromoCheckoutSession = async (input: {
     paymentStatus: PaymentStatus.PENDING,
     paymentMethod: PaymentMethod.CARD,
     customerEmail,
-    customerName: input.customerName,
-    customerPhone: input.customerPhone,
+    customerName:fullName,
+    customerPhone:contact,
     shippingAddress: orderType === OrderType.DELIVERY ? shippingAddress : undefined,
     pickupTime: orderType === OrderType.PICKUP ? pickupTime : undefined,
     notes,
