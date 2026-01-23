@@ -96,23 +96,23 @@ const getAllProductFromDB = async (query: Record<string, unknown>, userId?: stri
 
   return { meta, result: modifiedResult };
 };
-const getSingleProductFromDB = async (id: string, userId?: string) => {
-  const product = await ProductModel.findById(id);
-  if (!product) {
-    throw new AppError(httpStatus.NOT_FOUND, "Product is not found!");
-  }
+// const getSingleProductFromDB = async (id: string, userId?: string) => {
+//   const product = await ProductModel.findById(id);
+//   if (!product) {
+//     throw new AppError(httpStatus.NOT_FOUND, "Product is not found!");
+//   }
 
-  let isFavourite = false;
-  if (userId) {
-    const wishlist = await WishlistModel.findOne({ user: userId });
-    if (wishlist) {
-      isFavourite = wishlist.products.includes(new mongoose.Types.ObjectId(id) as any);
-    }
-  }
+//   let isFavourite = false;
+//   if (userId) {
+//     const wishlist = await WishlistModel.findOne({ user: userId });
+//     if (wishlist) {
+//       isFavourite = wishlist.products.includes(new mongoose.Types.ObjectId(id) as any);
+//     }
+//   }
 
-  const productObj = product.toObject();
-  return { ...productObj, isFavourite };
-};
+//   const productObj = product.toObject();
+//   return { ...productObj, isFavourite };
+// };
 const addProductIntoDB = async (payload: IProduct) => {
   console.log("product data->", payload.category);
 
@@ -176,27 +176,111 @@ const updateProductFromDB = async (id: string, payload: IProduct) => {
 };
 
 
-export const addReviewIntoDB = async (payload: TReview) => {
-  const { package_id, rating } = payload;
 
-  // ...validate package_id, ensure package exists...
+const addReviewIntoDB = async (userId: string, productId: string, rating: number, comment?: string) => {
+  const product = await ProductModel.findById(productId);
+  if (!product) throw new AppError(httpStatus.NOT_FOUND, 'Product not found');
 
-  const reviewDoc = {
-
-    package_id,      // <-- add this because your schema requires it
-    rating,
-
-  };
-
-  const updated = await ProductModel.findByIdAndUpdate(
-    package_id,
-    { $push: { review: reviewDoc } },
-    { new: true, runValidators: true }
+  //check user already given review or not if given then update previous review if not then add new review
+  const existingReviewIndex = product.review.findIndex(
+    (rev: any) => rev.user.toString() === userId
   );
 
-  if (!updated) throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, 'Failed to add review');
-  return updated;
+  if (existingReviewIndex > -1) {
+
+    product.review[existingReviewIndex].rating = rating;
+    if (comment) product.review[existingReviewIndex].comment = comment;
+  } else {
+
+    product.review.push({ user: new mongoose.Types.ObjectId(userId), rating, comment } as any);
+  }
+
+  await product.save();
+  return product;
 };
+
+const getSingleProductFromDB = async (id: string, userId?: string) => {
+  const product = await ProductModel.findById(id);
+  if (!product) {
+    throw new AppError(httpStatus.NOT_FOUND, "Product is not found!");
+  }
+
+  // average ratiing 
+  let averageRating = 0;
+  if (product.review && product.review.length > 0) {
+    const totalSum = product.review.reduce((acc, rev) => acc + rev.rating, 0);
+    averageRating = parseFloat((totalSum / product.review.length).toFixed(1));
+  }
+
+  // check wishlist
+  let isFavourite = false;
+  if (userId) {
+    const wishlist = await WishlistModel.findOne({ user: userId });
+    if (wishlist) {
+      isFavourite = wishlist.products.includes(new mongoose.Types.ObjectId(id) as any);
+    }
+  }
+
+  const productObj = product.toObject();
+
+  return { 
+    ...productObj, 
+    isFavourite, 
+    totalRating: averageRating 
+  };
+};
+
+
+const getProductRatingSummaryFromDB = async (productId: string) => {
+  const product = await ProductModel.findById(productId);
+  if (!product) {
+    throw new AppError(httpStatus.NOT_FOUND, "Product not found!");
+  }
+
+  const totalRatings = product.review.length;
+  const starCounts = {
+    "5": 0,
+    "4": 0,
+    "3": 0,
+    "2": 0,
+    "1": 0
+  };
+
+  let totalSum = 0;
+
+
+  product.review.forEach((rev) => {
+    const rating = rev.rating.toString() as keyof typeof starCounts;
+    if (starCounts[rating] !== undefined) {
+      starCounts[rating]++;
+    }
+    totalSum += rev.rating;
+  });
+
+  const averageRating = totalRatings > 0 ? parseFloat((totalSum / totalRatings).toFixed(1)) : 0;
+
+
+  const starPercentages = {
+    "5": totalRatings > 0 ? Math.round((starCounts["5"] / totalRatings) * 100) : 0,
+    "4": totalRatings > 0 ? Math.round((starCounts["4"] / totalRatings) * 100) : 0,
+    "3": totalRatings > 0 ? Math.round((starCounts["3"] / totalRatings) * 100) : 0,
+    "2": totalRatings > 0 ? Math.round((starCounts["2"] / totalRatings) * 100) : 0,
+    "1": totalRatings > 0 ? Math.round((starCounts["1"] / totalRatings) * 100) : 0
+  };
+
+  return {
+    averageRating,
+    totalRatings,
+    starCounts,
+    starPercentages
+  };
+};
+
+
+
+
+
+
 
 
 
@@ -206,5 +290,6 @@ export const ProductServices = {
   addProductIntoDB,
   deleteProductFromDB,
   updateProductFromDB,
-  addReviewIntoDB
+  addReviewIntoDB,
+  getProductRatingSummaryFromDB
 };

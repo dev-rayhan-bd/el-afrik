@@ -55,13 +55,16 @@ router.patch(
   validateRequest(updateProductSchema),
   ProductControllers.editProduct
 );
-router.post('/addReview',
 
-  ProductControllers.createReview,
-
+router.post(
+  '/add-review',
+  auth(USER_ROLE.user), 
+  ProductControllers.createReview
 );
-// router.post('/checkout',PackageControllers.initiateOrderPayment)
 
-// router.get('/allReview/:id',PackageControllers.getAllReview)
+router.get(
+  '/rating-summary/:id',
+  ProductControllers.getProductRatingSummary
+);
 
 export const ProductRoutes = router;

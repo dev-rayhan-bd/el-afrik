@@ -80,25 +80,19 @@ const createProduct = async (
     next(err);
   }
 };
-const createReview = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-//   console.log("create revieew-->",req.body);
-  try {
-    const result = await ProductServices.addReviewIntoDB(req.body);
+const createReview = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user.userId;
+  const { productId, rating, comment } = req.body;
 
-    sendResponse(res, {
-      success: true,
-      message: 'Review Sent Successfull',
-      statusCode: httpStatus.CREATED,
-      data: result,
-    });
-  } catch (err) {
-    next(err);
-  }
-};
+  const result = await ProductServices.addReviewIntoDB(userId, productId, rating, comment);
+
+  sendResponse(res, {
+    success: true,
+    message: 'Rating submitted successfully',
+    statusCode: httpStatus.OK,
+    data: result,
+  });
+});
 
 const deleteProduct = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -152,8 +146,18 @@ const editProduct = async (
     next(err);
   }
 };
+const getProductRatingSummary = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await ProductServices.getProductRatingSummaryFromDB(id);
 
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Rating summary retrieved successfully',
+    data: result,
+  });
+});
 
 export const ProductControllers = {
-getAllProduct,getSingleProduct,createProduct,deleteProduct,editProduct,createReview
+getAllProduct,getSingleProduct,createProduct,deleteProduct,editProduct,createReview,getProductRatingSummary
 };

@@ -6,24 +6,20 @@ import { IProductDocument, ProductStatus, TReview } from './product.interface';
 
 const ReviewSchema: Schema = new Schema<TReview>(
   {
- 
-    package_id: {
+    user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Package",
-      required: [true, "Package reference is required"],
+      ref: "User",
+      required: [true, "User reference is required"],
     },
-
     rating: {
       type: Number,
       required: [true, "Rating is required"],
       min: [1, "Rating must be at least 1"],
       max: [5, "Rating cannot be more than 5"],
     },
-  
+    comment: { type: String }
   },
-  {
-    timestamps: true, // Automatically create createdAt and updatedAt fields
-  }
+  { timestamps: true }
 );
 
 

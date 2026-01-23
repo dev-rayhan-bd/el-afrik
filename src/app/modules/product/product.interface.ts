@@ -1,13 +1,13 @@
 // interfaces/product.interface.ts
 
 import mongoose, { Document, Types } from 'mongoose';
-export type TReview ={
 
-  package_id: mongoose.Types.ObjectId; 
-  rating: number;           
-  
+export type TReview = {
+  user: mongoose.Types.ObjectId; 
+  rating: number;
+  comment?: string; 
+  createdAt?: Date;
 }
-
 export type TDiscount={
   discount_type:string;
   discount_amount:number;
