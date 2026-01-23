@@ -1,44 +1,37 @@
-
 import { Request } from 'express';
-import config from '../config';
-import s3 from '../utils/s3';
 
-
-
+import AppError from '../errors/AppError';
+import httpStatus from 'http-status';
+import cloudinary from '../utils/cloudinary';
 
 const uploadImage = async (
   req: Request,
-  file?: Express.Multer.File, 
+  file?: Express.Multer.File,
 ): Promise<string> => {
-  const target = file ?? req.file; 
+  const target = file ?? req.file;
 
   if (!target) {
-    throw new Error('Please upload a file');
+    throw new AppError(httpStatus.BAD_REQUEST, 'Please upload a file');
   }
 
-  const env = process.env.NODE_ENV;
 
-  // production: S3
-  if (env === 'production') {
-    // console.log('from production',env);
-    const params = {
-      Bucket: config.aws_bucket_name as string,
-      Key: `uploads/${Date.now()}-${target.originalname}`,
-      Body: target.buffer,
-      ContentType: target.mimetype,
-    };
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: 'el-afrik', 
+        resource_type: 'auto',
+      },
+      (error, result) => {
+        if (error) {
+          return reject(new AppError(httpStatus.INTERNAL_SERVER_ERROR, 'Cloudinary Upload Failed'));
+        }
+        resolve(result?.secure_url as string);
+      }
+    );
 
-    const data = await s3.upload(params).promise();
-    return data.Location;  // S3 URL
-  }else{
-// console.log('from else',env);
-    
-      //  development: local /uploads
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
-      const localPath = `/uploads/${target.filename}`;
-      return baseUrl + localPath;
-  }
+
+    uploadStream.end(target.buffer);
+  });
 };
-
 
 export default uploadImage;
