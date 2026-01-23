@@ -236,11 +236,21 @@ const purchaseWithPoints = async (input: IPointRedemptionInput) => {
     description: `Redeemed ${items.length} item(s) using ${totalPointsRequired} points`,
   });
 
-  for (const item of items) {
+for (const item of items) {
+
+  const product = await ProductModel.findByIdAndUpdate(
+    item.productId,
+    { $inc: { quantity: -item.quantity } },
+    { new: true }
+  );
+
+
+  if (product && product.quantity <= 0) {
     await ProductModel.findByIdAndUpdate(item.productId, {
-      $inc: { quantity: -item.quantity },
+      $set: { status: 'out_of_stock', quantity: 0 }
     });
   }
+}
 
   await sendRedemptionConfirmationEmail(order, user);
 

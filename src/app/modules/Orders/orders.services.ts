@@ -510,12 +510,21 @@ const handlePaymentSuccess = async (session: Stripe.Checkout.Session) => {
 
   await CartModel.findOneAndDelete({ user: order.user });
 
-  for (const item of order.items) {
+for (const item of order.items) {
+
+  const product = await ProductModel.findByIdAndUpdate(
+    item.product,
+    { $inc: { quantity: -item.quantity } },
+    { new: true }
+  );
+
+
+  if (product && product.quantity <= 0) {
     await ProductModel.findByIdAndUpdate(item.product, {
-      $inc: { quantity: -item.quantity },
+      $set: { status: 'out_of_stock', quantity: 0 }
     });
   }
-
+}
 
   if (order.totalPoints > 0 && !order.pointsAdded) {
   try {
@@ -725,11 +734,21 @@ const updateOrderStatus = async (
   } else if (newStatus === OrderStatus.CANCELLED) {
     order.cancelledAt = new Date();
 
-    for (const item of order.items) {
-      await ProductModel.findByIdAndUpdate(item.product, {
-        $inc: { quantity: item.quantity },
-      });
-    }
+for (const item of order.items) {
+
+  const product = await ProductModel.findByIdAndUpdate(
+    item.product,
+    { $inc: { quantity: item.quantity } },
+    { new: true }
+  );
+
+
+  if (product && product.quantity > 0) {
+    await ProductModel.findByIdAndUpdate(item.product, {
+      $set: { status: 'in_stock' }
+    });
+  }
+}
 
     if (order.pointsUsed > 0) {
       await RewardServices.refundPoints(
@@ -776,11 +795,19 @@ const cancelOrder = async (
     note: reason || "Cancelled by customer",
   });
 
-  for (const item of order.items) {
+for (const item of order.items) {
+  const product = await ProductModel.findByIdAndUpdate(
+    item.product,
+    { $inc: { quantity: item.quantity } },
+    { new: true }
+  );
+
+  if (product && product.quantity > 0) {
     await ProductModel.findByIdAndUpdate(item.product, {
-      $inc: { quantity: item.quantity },
+      $set: { status: 'in_stock' }
     });
   }
+}
 
   if (order.pointsUsed > 0) {
     await RewardServices.refundPoints(
