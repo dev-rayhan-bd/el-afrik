@@ -64,7 +64,7 @@ const createCheckout = catchAsync(async (req: Request, res: Response) => {
 
 const createSingleProductCheckout = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.userId;
-  const { productId, quantity, orderType, shippingAddress, pickupTime, notes } = req.body;
+  const { productId, quantity, orderType, shippingAddress, pickupTime, notes} = req.body;
 
   if (!productId || !quantity) {
     throw new AppError(httpStatus.BAD_REQUEST, "Product ID and quantity are required");
@@ -81,6 +81,7 @@ const createSingleProductCheckout = catchAsync(async (req: Request, res: Respons
     shippingAddress,
     pickupTime,
     notes,
+  
   });
 
   sendResponse(res, {
@@ -91,6 +92,37 @@ const createSingleProductCheckout = catchAsync(async (req: Request, res: Respons
   });
 });
 
+const createPromoCheckout = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.userId;
+  const { specialPromoId, quantity, orderType, shippingAddress, pickupTime, notes } = req.body;
+
+  if (!specialPromoId) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Special Promo ID is required");
+  }
+  if (!quantity) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Quantity is required");
+  }
+
+  const result = await OrderService.createSpecialPromoCheckoutSession({
+    userId: userId.toString(),
+    specialPromoId,
+    quantity: Number(quantity),
+    orderType,
+    customerEmail: req.user?.email,
+    customerName: `${req.user?.firstName} ${req.user?.lastName}`,
+    customerPhone: req.user?.contact,
+    shippingAddress,
+    pickupTime,
+    notes,
+  });
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Promo checkout session created successfully',
+    data: result,
+  });
+});
 
 /**
  * Get My Orders
@@ -313,5 +345,6 @@ export const OrderController = {
   getOrderStats,
   updateOrderStatus,
   getOrderByIdAdmin,
+  createPromoCheckout
 
 };

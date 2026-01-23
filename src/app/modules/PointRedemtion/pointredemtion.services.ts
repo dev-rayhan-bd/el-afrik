@@ -385,9 +385,9 @@ const cancelRedemptionOrder = async (
     });
   }
 
-  console.log(
-    `❌ Redemption order ${order.orderNumber} cancelled. ${order.pointsUsed} points refunded.`
-  );
+  // console.log(
+  //   `❌ Redemption order ${order.orderNumber} cancelled. ${order.pointsUsed} points refunded.`
+  // );
 
   const currentPoints = await RewardServices.getAvailablePoints(userId);
 

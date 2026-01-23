@@ -28,6 +28,12 @@ router.post(
   auth(USER_ROLE.user),
   OrderController.createSingleProductCheckout
 );
+// buy now with special promo
+router.post(
+  '/promo-buy-now',
+  auth(USER_ROLE.user),
+  OrderController.createPromoCheckout
+);
 // Get user's orders
 router.get('/my-orders', auth(USER_ROLE.user), OrderController.getMyOrders);
 

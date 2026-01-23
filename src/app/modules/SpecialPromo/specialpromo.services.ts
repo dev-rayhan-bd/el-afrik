@@ -4,7 +4,7 @@ import { ProductModel } from '../product/product.model';
 import { ISpecialPromo } from './specialpromo.interface';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { SpecialPromoModel } from './specialpromo.model';
-import { generateRandomPromoCode } from '../../utils/generateRandomPromoCode';
+
 
 
 
@@ -30,7 +30,7 @@ const createSpecialPromo = async (payload: Partial<ISpecialPromo>) => {
   }
 
 
-  payload.specialPromoCode = generateRandomPromoCode();
+
 
 
   const result = await SpecialPromoModel.create(payload);
@@ -60,8 +60,24 @@ const deleteSpecialPromo = async (id: string) => {
   return result;
 };
 
+const validatePromoCode = async (productId: string, code: string) => {
+  const promo = await SpecialPromoModel.findOne({
+    product: productId,
+    promoCode: code.toUpperCase(),
+    validity: { $gte: new Date() }
+  });
+
+  if (!promo) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Invalid or expired promo code for this product!");
+  }
+
+  return promo;
+};
+
+
 export const SpecialPromoServices = {
   createSpecialPromo,
   getAllSpecialPromos,
   deleteSpecialPromo,
+  validatePromoCode
 };

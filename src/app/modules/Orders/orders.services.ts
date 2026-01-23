@@ -26,6 +26,7 @@ import { UserModel } from "../User/user.model";
 import { RewardServices } from "../Reward/reward.services";
 import { PointSource } from "../Reward/reward.interface";
 import { sendNotification, sendNotificationToAdmins } from "../../utils/sendNotification";
+import { SpecialPromoModel } from "../SpecialPromo/specialpromo.model";
 
 const stripe = new Stripe(config.stripe_secret_key as string);
 
@@ -204,6 +205,7 @@ const createSingleProductCheckoutSession = async (input: {
   shippingAddress?: IShippingAddress;
   pickupTime?: string;
   notes?: string;
+
 }) => {
   const { userId, productId, quantity, orderType, customerEmail, shippingAddress, pickupTime, notes } = input;
 
@@ -217,6 +219,9 @@ const createSingleProductCheckoutSession = async (input: {
   }
 
   const unitPrice = product.discountedPrice || product.price;
+
+
+
   const subtotal = parseFloat((unitPrice * quantity).toFixed(2));
   const totalPoints = (product.points || 0) * quantity;
   const deliveryFee = orderType === OrderType.DELIVERY ? (product.deliveryFee || 0) * quantity : 0;
@@ -295,6 +300,143 @@ const createSingleProductCheckoutSession = async (input: {
 
   return { url: session.url, orderNumber: order.orderNumber };
 };
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// buy now with special promo code
+// ═══════════════════════════════════════════════════════════════════════
+
+
+const createSpecialPromoCheckoutSession = async (input: {
+  userId: string;
+  specialPromoId: string;
+  quantity: number;
+  orderType: OrderType;
+  customerEmail: string;
+  customerName?: string;
+  customerPhone?: string;
+  shippingAddress?: IShippingAddress;
+  pickupTime?: string;
+  notes?: string;
+}) => {
+  const { userId, specialPromoId, quantity, orderType, customerEmail, shippingAddress, pickupTime, notes } = input;
+
+  const promo = await SpecialPromoModel.findById(specialPromoId).populate('product');
+  if (!promo) {
+    throw new AppError(httpStatus.NOT_FOUND, "Special Promo offer not found!");
+  }
+
+  if (new Date(promo.validity) < new Date()) {
+    throw new AppError(httpStatus.BAD_REQUEST, "This promo offer has expired!");
+  }
+
+  const product = promo.product as any; // IProductDocument
+  if (!product) {
+    throw new AppError(httpStatus.NOT_FOUND, "Product associated with this promo not found!");
+  }
+
+
+  if (product.quantity < quantity) {
+    throw new AppError(httpStatus.BAD_REQUEST, `Insufficient stock. Available: ${product.quantity}`);
+  }
+
+  let unitPrice = product.discountedPrice || product.price;
+
+  if (promo.discountType === 'percentage') {
+    unitPrice = unitPrice - (unitPrice * (promo.discountAmount / 100));
+  } else {
+    unitPrice = unitPrice - promo.discountAmount;
+  }
+  
+  unitPrice = Math.max(unitPrice, 0);
+
+  const subtotal = parseFloat((unitPrice * quantity).toFixed(2));
+  const totalPoints = (product.points || 0) * quantity;
+  const deliveryFee = orderType === OrderType.DELIVERY ? (product.deliveryFee || 0) * quantity : 0;
+  const totalAmount = parseFloat((subtotal + deliveryFee).toFixed(2));
+
+  const orderItems: IOrderItem[] = [{
+    product: product._id,
+    name: product.name,
+    image: product.images?.[0],
+    price: unitPrice,
+    quantity,
+    total: subtotal,
+    points: totalPoints,
+  }];
+
+  const order = await OrderModel.create({
+    user: userId,
+    items: orderItems,
+    subtotal,
+    deliveryFee,
+    totalAmount,
+    totalPoints,
+    orderType,
+    orderStatus: OrderStatus.ONGOING,
+    paymentStatus: PaymentStatus.PENDING,
+    paymentMethod: PaymentMethod.CARD,
+    customerEmail,
+    customerName: input.customerName,
+    customerPhone: input.customerPhone,
+    shippingAddress: orderType === OrderType.DELIVERY ? shippingAddress : undefined,
+    pickupTime: orderType === OrderType.PICKUP ? pickupTime : undefined,
+    notes,
+    statusHistory: [{
+      status: OrderStatus.ONGOING,
+      timestamp: new Date(),
+      note: `Special Promo Order (${promo.specialPromoCode}) - ${orderType.toUpperCase()}`,
+    }],
+  });
+
+  const lineItems = [{
+    price_data: {
+      currency: "usd",
+      product_data: { 
+        name: `${product.name} (Promo: ${promo.specialPromoCode})`,
+        description: `Special discount applied via promo code`
+      },
+      unit_amount: Math.round(unitPrice * 100),
+    },
+    quantity,
+  }];
+
+  if (deliveryFee > 0) {
+    lineItems.push({
+      price_data: {
+        currency: "usd",
+        product_data: { name: "Delivery Fee", description: `Special discount applied via promo code` },
+        unit_amount: Math.round(deliveryFee * 100),
+      },
+      quantity: 1,
+    });
+  }
+
+  const baseUrl = (config.frontend_url || "").replace(/\/+$/, "");
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ["card"],
+    line_items: lineItems,
+    mode: "payment",
+    customer_email: customerEmail,
+    metadata: {
+      orderId: order._id.toString(),
+      userId: userId,
+      promoCode: promo.specialPromoCode
+    },
+    success_url: `${baseUrl}/order/success?session_id={CHECKOUT_SESSION_ID}&order=${order.orderNumber}`,
+    cancel_url: `${baseUrl}/order/cancel?order=${order.orderNumber}`,
+  });
+
+  order.stripeSessionId = session.id;
+  await order.save();
+
+  return { url: session.url, orderNumber: order.orderNumber };
+};
+
+
+
+
+
 
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -854,11 +996,11 @@ Total: $${order.totalAmount.toFixed(2)}
 
 🎉 You earned ${order.totalPoints} points from this order!
 
-We'll notify you when your order status changes.
+
       `,
     });
   } catch (error) {
-    console.error("Failed to send confirmation email:", error);
+    // console.error("Failed to send confirmation email:", error); ja
   }
 }
 
@@ -908,5 +1050,6 @@ export const OrderService = {
   cancelOrder,
   getAllOrders,
   getOrderStats,
-  createSingleProductCheckoutSession
+  createSingleProductCheckoutSession,
+  createSpecialPromoCheckoutSession
 };
