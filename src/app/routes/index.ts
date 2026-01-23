@@ -17,6 +17,7 @@ import { PointRedemptionRoutes } from '../modules/PointRedemtion/pointredemtion.
 import { CateringRoutes } from '../modules/CateringBooking/cateringBooking.routes';
 import { BirthdayRoutes } from '../modules/Birthday/birthday.routes';
 import { NotificationRoutes } from '../modules/Notification/notification.routes';
+import { QRCodeRoutes } from '../modules/QRcode/qrcode.routes';
 
 
 
@@ -97,6 +98,10 @@ const moduleRoutes = [
     path: '/notification',
     route: NotificationRoutes
   },
+  {
+  path: '/qrcode',
+  route: QRCodeRoutes
+}
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
