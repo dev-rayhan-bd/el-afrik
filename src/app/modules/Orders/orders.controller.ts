@@ -135,19 +135,22 @@ const createPromoCheckout = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-/**
- * Get My Orders
- * GET /orders/my-orders?orderStatus=ongoing&orderType=delivery&page=1&limit=10
- */
+
+  // Get My Orders
+
 const getMyOrders = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.userId;
-  const { orderStatus, orderType, page = 1, limit = 10 } = req.query;
+  
+ 
+  const { orderStatus, orderType, paymentStatus, search, page = 1, limit = 10 } = req.query;
 
   const result = await OrderService.getMyOrders(
     userId.toString(),
     {
       orderStatus: orderStatus as OrderStatus,
       orderType: orderType as OrderType,
+      paymentStatus: paymentStatus as any, 
+      search: search as string,          
     },
     {
       page: Number(page),

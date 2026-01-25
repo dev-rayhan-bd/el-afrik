@@ -729,12 +729,23 @@ const getMyOrders = async (
     sortBy = "createdAt",
     sortOrder = "desc",
   } = pagination;
-  const { orderStatus, orderType } = filters;
+
+  
+  const { orderStatus, orderType, paymentStatus, search } = filters;
 
   const query: any = { user: userId };
 
+
   if (orderStatus) query.orderStatus = orderStatus;
   if (orderType) query.orderType = orderType;
+  if (paymentStatus) query.paymentStatus = paymentStatus; 
+
+
+  if (search) {
+    query.$or = [
+      { orderNumber: { $regex: search, $options: "i" } },
+    ];
+  }
 
   const skip = (page - 1) * limit;
   const sortOptions: any = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
