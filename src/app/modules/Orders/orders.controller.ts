@@ -15,7 +15,8 @@ import { sendNotification } from '../../utils/sendNotification';
 
 const createCheckout = catchAsync(async (req: Request, res: Response) => {
   const userId = req?.user?.userId;
-  const { orderType, shippingAddress, pickupTime, notes } = req.body;
+  const { orderType, shippingAddress, pickupTime, notes,   uberQuoteId, 
+    uberFee } = req.body;
 
   if (!userId) {
     return sendResponse(res, {
@@ -55,6 +56,8 @@ const createCheckout = catchAsync(async (req: Request, res: Response) => {
     shippingAddress,
     pickupTime,
     notes,
+    uberQuoteId, 
+    uberFee
   });
 
   sendResponse(res, {
@@ -67,7 +70,8 @@ const createCheckout = catchAsync(async (req: Request, res: Response) => {
 
 const createSingleProductCheckout = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.userId;
-  const { productId, quantity, orderType, shippingAddress, pickupTime, notes} = req.body;
+  const { productId, quantity, orderType, shippingAddress, pickupTime, notes,uberQuoteId, 
+    uberFee} = req.body;
 
   if (!productId || !quantity) {
     throw new AppError(httpStatus.BAD_REQUEST, "Product ID and quantity are required");
@@ -84,7 +88,8 @@ const createSingleProductCheckout = catchAsync(async (req: Request, res: Respons
     shippingAddress,
     pickupTime,
     notes,
-  
+  uberQuoteId, 
+    uberFee
   });
 
   sendResponse(res, {
@@ -97,7 +102,8 @@ const createSingleProductCheckout = catchAsync(async (req: Request, res: Respons
 
 const createPromoCheckout = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.userId;
-  const { specialPromoId, quantity, orderType, shippingAddress, pickupTime, notes } = req.body;
+  const { specialPromoId, quantity, orderType, shippingAddress, pickupTime, notes,uberQuoteId, 
+    uberFee } = req.body;
 
   if (!specialPromoId) {
     throw new AppError(httpStatus.BAD_REQUEST, "Special Promo ID is required");
@@ -117,6 +123,8 @@ const createPromoCheckout = catchAsync(async (req: Request, res: Response) => {
     shippingAddress,
     pickupTime,
     notes,
+    uberQuoteId, 
+    uberFee
   });
 
   sendResponse(res, {
