@@ -11,58 +11,7 @@ import CategoryModel from "../categories/categories.model";
 import { WishlistModel } from "../Wishlist/wishlist.model";
 import mongoose from "mongoose";
 
-// const getAllProductFromDB = async (query: Record<string, unknown>) => {
-//   const queryBuilder = new QueryBuilder(ProductModel.find(), query);
 
-//   // Ensure sorting by price if 'sort' query is passed as 'asc' or 'desc'
-//   if (query.sort === 'asc') {
-//     queryBuilder.sort('price', 1); // Ascending sort by price
-//   } else if (query.sort === 'desc') {
-//     queryBuilder.sort('price', -1); // Descending sort by price
-//   } else {
-//     queryBuilder.sort(); // Default sort, for example by 'createdAt'
-//   }
-
-//   queryBuilder.search(["name"]).filter().paginate();
-  
-//   const result = await queryBuilder.modelQuery;
-//   const meta = await queryBuilder.countTotal();
-
-//   return { meta, result };
-// };
-
-
-// const getSingleProductFromDB = async (id: string) => {
-//   const result = await ProductModel.findById(id);
-//   return result;
-// };
-// const getAllProductFromDB = async (query: Record<string, unknown>, userId?: string) => {
-//   const queryBuilder = new QueryBuilder(ProductModel.find(), query);
-
-//   queryBuilder.search(["name"]).filter().paginate();
-  
-//   const result = await queryBuilder.modelQuery;
-//   const meta = await queryBuilder.countTotal();
-
-//   let wishlistProductIds: string[] = [];
-//   if (userId) {
-//     const wishlist = await WishlistModel.findOne({ user: userId });
-//     if (wishlist) {
-//       wishlistProductIds = wishlist.products.map((id) => id.toString());
-//     }
-//   }
-
-//   const modifiedResult = result.map((product) => {
-//     const productObj = product.toObject();
-//     return {
-//       ...productObj,
-//       isFavourite: wishlistProductIds.includes(product._id.toString()),
-//     };
-//   });
-
-//   return { meta, result: modifiedResult };
-// };
-// c:\STA\El-afrik\src\app\modules\product\product.services.ts
 
 const getAllProductFromDB = async (query: Record<string, unknown>, userId?: string) => {
 
@@ -73,7 +22,7 @@ const getAllProductFromDB = async (query: Record<string, unknown>, userId?: stri
   const queryBuilder = new QueryBuilder(ProductModel.find().populate('category'), query);
 
 
-  queryBuilder.search(["name"]).filter().paginate();
+  queryBuilder.search(["name", "description"]) .filter().paginate();
   
   const result = await queryBuilder.modelQuery;
   const meta = await queryBuilder.countTotal();
