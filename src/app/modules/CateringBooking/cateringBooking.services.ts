@@ -62,8 +62,8 @@ const createCheckoutSession = async (userId: string, payload: any) => {
     venueAddress,
     contactNumber,
     notes,
-       uberQuoteId, // সেভ হচ্ছে
-    uberFee      // সেভ হচ্ছে
+       uberQuoteId, 
+    uberFee 
   });
 const user = await UserModel.findById(userId);
 if (!user) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
@@ -99,7 +99,7 @@ const handlePaymentSuccess = async (bookingId: string) => {
 
   booking.paymentStatus = CateringPaymentStatus.PAID;
   booking.status = BookingStatus.CONFIRMED;
-   // উবার রাইডার ডিসপ্যাচ
+   // dispatch uber rider
   if (booking.uberQuoteId) {
     const user = booking.user as any;
     const uberPayload = {

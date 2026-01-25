@@ -202,10 +202,10 @@ const contact = user.contact;
       allowed_countries: ["BD", "US"],
     };
   }
-  // Stripe session metadata-তেও uberQuoteId যোগ করা যেতে পারে যদি দরকার হয়
+ 
   sessionConfig.metadata = {
     ...sessionConfig.metadata,
-    uberQuoteId: uberQuoteId as string // Stripe webhook এ কাজে লাগতে পারে
+    uberQuoteId: uberQuoteId as string // for Stripe webhook 
   };
   const session = await stripe.checkout.sessions.create(sessionConfig);
 
@@ -237,8 +237,8 @@ const createSingleProductCheckoutSession = async (input: {
   shippingAddress?: IShippingAddress;
   pickupTime?: string;
   notes?: string;
-    uberQuoteId?: string; // নতুন যোগ করা হয়েছে
-  uberFee?: number; // নতুন যোগ করা হয়েছে
+    uberQuoteId?: string; 
+  uberFee?: number; 
 
 }) => {
   const { userId, productId, quantity, orderType, customerEmail, shippingAddress, pickupTime, notes,  uberQuoteId,
@@ -616,7 +616,7 @@ if (order.orderType === OrderType.DELIVERY && order.uberQuoteId) {
       order.uberDeliveryId = uberResponse.deliveryId;
       order.uberTrackingUrl = uberResponse.tracking_url;
       order.uberStatus = uberResponse.status;
-      await order.save(); // এখানে ডাটাবেজে সেভ হচ্ছে
+      await order.save(); 
     }
   } catch (uberError) {
     console.error("Uber Dispatch Error:", uberError);

@@ -347,38 +347,38 @@ const getOrderByIdAdmin = catchAsync(async (req: Request, res: Response) => {
 
 
 
-// ১. ডেলিভারি ফি জানার জন্য নতুন কন্ট্রোলার
+// delivery fee
 const getDeliveryFee = catchAsync(async (req: Request, res: Response) => {
-  const { pickupAddress, dropoffAddress } = req.body; // ফ্রন্টএন্ড থেকে রেস্টুরেন্ট এবং ইউজারের এড্রেস আসবে
+  const { dropoffAddress } = req.body; 
 
-  const quote = await UberService.getUberDeliveryQuote(pickupAddress, dropoffAddress);
+  const quote = await UberService.getUberDeliveryQuote(dropoffAddress);
   
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Delivery fee calculated successfully',
     data: {
-      fee: quote.fee, // সার্ভিস থেকে ডলারে কনভার্ট হয়ে আসছে
+      fee: quote.fee, 
       quoteId: quote.quoteId,
-      estimatedDuration: quote.duration // আনুমানিক সময়
+      estimatedDuration: quote.duration 
     },
   });
 });
 
-// ২. উবার ওয়েবহুক হ্যান্ডেল করার জন্য নতুন কন্ট্রোলার
+//uber webhook
 const handleUberWebhook = catchAsync(async (req: Request, res: Response) => {
-  const { delivery_id, status } = req.body; // উবার থেকে আসা ডাটা
+  const { delivery_id, status } = req.body; 
 
-  // ডেলিভারি আইডি দিয়ে অর্ডারটি খুঁজুন
+
   const order = await OrderModel.findOne({ uberDeliveryId: delivery_id });
   if (order) {
-    order.uberStatus = status; // উবার থেকে আসা স্ট্যাটাস সেভ করুন
+    order.uberStatus = status; 
     
     if (status === 'delivered') {
       order.orderStatus = OrderStatus.DELIVERED;
       order.deliveredAt = new Date();
     }
-    // অন্য কোনো স্ট্যাটাস যেমন 'picking_up', 'dropping_off' ইত্যাদি
+
     await order.save();
 
     await sendNotification(
@@ -388,7 +388,7 @@ const handleUberWebhook = catchAsync(async (req: Request, res: Response) => {
       'order'
     );
   }
-  res.status(200).send('Webhook Received'); // উবারকে 200 OK রেসপন্স পাঠান
+  res.status(200).send('Webhook Received'); 
 });
 
 
