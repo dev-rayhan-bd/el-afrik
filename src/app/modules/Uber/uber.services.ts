@@ -6,10 +6,9 @@ import httpStatus from 'http-status';
 const UBER_TOKEN_URL = 'https://login.uber.com/oauth/v2/token';
 const UBER_API_BASE = 'https://api.uber.com/v1/customers';
 
-
 const RESTAURANT_ADDRESS = "8882 170 St NW, Edmonton, AB T5T 3J7, Canada";
-
-//  MOCK MODE 
+// --- এটি MOCK MODE সুইচ ---
+// পারমিশন না পাওয়া পর্যন্ত এটি true রাখুন, পেলে false করে দিবেন।
 const IS_MOCK_MODE = true; 
 
 const getUberToken = async () => {
@@ -30,9 +29,9 @@ const getUberToken = async () => {
   }
 };
 
-
 export const getUberDeliveryQuote = async (dropoffAddress: string) => {
   if (IS_MOCK_MODE) {
+    // ফেক রেসপন্স যাতে ফ্রন্টএন্ড কাজ করতে পারে
     return {
       quoteId: "quote_mock_" + Math.random().toString(36).substring(7),
       fee: 12.50,
@@ -45,10 +44,7 @@ export const getUberDeliveryQuote = async (dropoffAddress: string) => {
   try {
     const response = await axios.post(
       `${UBER_API_BASE}/${config.uber_customer_id}/delivery_quotes`,
-      { 
-        pickup_address: RESTAURANT_ADDRESS, 
-        dropoff_address: dropoffAddress 
-      },
+      { pickup_address:RESTAURANT_ADDRESS, dropoff_address: dropoffAddress },
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return {
@@ -62,21 +58,25 @@ export const getUberDeliveryQuote = async (dropoffAddress: string) => {
   }
 };
 
-
-  //  Create Delivery for rider confirm
-
 export const createUberDeliveryOrder = async (order: any, quoteId: string) => {
-  if (IS_MOCK_MODE) {
+  // if (IS_MOCK_MODE) {
+  //   return {
+  //     deliveryId: "del_mock_" + Math.random().toString(36).substring(7),
+  //     status: "pickup",
+  //     tracking_url: "https://www.uber.com/lookup/tracking-demo", // এই লিঙ্কটি ফ্লুটারে দেখাবেন
+  //     courier_name: "John Rider (Demo)",
+  //     fee: 12.50
+  //   };
+  // }
+ if (IS_MOCK_MODE) {
     return {
       deliveryId: "del_mock_" + Date.now(),
       status: "pickup",
-
-      tracking_url: `https://www.google.com/maps/dir/${RESTAURANT_ADDRESS.replace(/ /g, '+')}/${(order.shippingAddress.line1 + "+" + order.shippingAddress.city).replace(/ /g, '+')}`, 
-      courier_name: "John Rider (Simulation Mode)",
-      fee: 12.50
+      tracking_url: "https://www.uber.com/lookup/tracking-demo",
+      courier_name: "John Rider (Demos)",
+  fee: 13.50
     };
   }
-
   const token = await getUberToken();
   try {
     const response = await axios.post(
@@ -84,7 +84,7 @@ export const createUberDeliveryOrder = async (order: any, quoteId: string) => {
       {
         quote_id: quoteId,
         pickup_name: "El Afrik Lounge",
-        pickup_address: RESTAURANT_ADDRESS, 
+        pickup_address: "8882 170 St NW, Edmonton, AB T5T 3J7, Canada",
         pickup_phone_number: "+17804444444",
         dropoff_name: order.customerName,
         dropoff_address: order.shippingAddress.line1 + ", " + order.shippingAddress.city,
