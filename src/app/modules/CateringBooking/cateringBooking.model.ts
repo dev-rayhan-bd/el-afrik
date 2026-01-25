@@ -26,6 +26,11 @@ const CateringBookingSchema = new Schema<ICateringBookingDocument>({
   status: { type: String, enum: Object.values(BookingStatus), default: BookingStatus.PENDING },
   stripeSessionId: String,
   notes: String,
+  uberQuoteId: String,
+  uberDeliveryId: String,
+  uberTrackingUrl: String,
+  uberStatus: String,
+  uberFee: { type: Number, default: 0 },
 }, { timestamps: true });
 
 export const CateringPackageModel = model<ICateringPackageDocument>('CateringPackage', CateringPackageSchema);

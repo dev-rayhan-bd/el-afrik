@@ -33,6 +33,11 @@ export interface ICateringBooking {
   status: BookingStatus;
   stripeSessionId?: string;
   notes?: string;
+    uberQuoteId?: string;       // uber deliver quote id
+  uberDeliveryId?: string;    // uber delivery id
+  uberTrackingUrl?: string;   // rider traking 
+  uberStatus?: string;        // uber delivery status ('picking_up', 'dropping_off', 'delivered')
+  uberFee?: number;  
 }
 
 export interface ICateringPackageDocument extends ICateringPackage, Document {}

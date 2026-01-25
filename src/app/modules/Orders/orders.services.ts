@@ -120,9 +120,9 @@ const contact = user.contact;
 
 
   if (orderType === OrderType.DELIVERY && uberFee !== undefined) {
-    totalDeliveryFee = uberFee; // উবার থেকে প্রাপ্ত ডেলিভারি ফি
+    totalDeliveryFee = uberFee; 
   } else if (orderType === OrderType.DELIVERY) {
-    // যদি uberFee না আসে, তবে আপনার ডিফল্ট ডেলিভারি ফি ক্যালকুলেশন
+
     for (const cartItem of cart.items) {
       const product = await ProductModel.findById(cartItem.product);
       if (product) totalDeliveryFee += (product.deliveryFee || 0) * cartItem.quantity;
@@ -136,7 +136,7 @@ const contact = user.contact;
     user: userId,
     items: orderItems,
     subtotal,
-    deliveryFee: totalDeliveryFee,
+    deliveryFee:uberFee || totalDeliveryFee,
     discount: 0,
     totalAmount,
     totalPoints,
@@ -154,8 +154,8 @@ const contact = user.contact;
       orderType === OrderType.DELIVERY ? shippingAddress : undefined,
     pickupTime: orderType === OrderType.PICKUP ? pickupTime : undefined,
     notes,
-     uberQuoteId: uberQuoteId, // উবার কোট আইডি সেভ করা হয়েছে
-    uberFee: totalDeliveryFee, // উবারের ফি সেভ করা হয়েছে
+     uberQuoteId: uberQuoteId, 
+    uberFee: uberFee||totalDeliveryFee, 
     statusHistory: [
       {
         status: OrderStatus.ONGOING,
@@ -292,7 +292,7 @@ let deliveryFee = 0;
     user: userId,
     items: orderItems,
     subtotal,
-    deliveryFee,
+    deliveryFee:uberFee||deliveryFee,
     totalAmount,
     totalPoints,
     orderType,
@@ -306,7 +306,7 @@ let deliveryFee = 0;
     pickupTime: orderType === OrderType.PICKUP ? pickupTime : undefined,
     notes,
     uberQuoteId: uberQuoteId,
-    uberFee: deliveryFee,
+    uberFee: uberFee || deliveryFee,
     statusHistory: [{
       status: OrderStatus.ONGOING,
       timestamp: new Date(),
@@ -371,8 +371,8 @@ const createSpecialPromoCheckoutSession = async (input: {
   shippingAddress?: IShippingAddress;
   pickupTime?: string;
   notes?: string;
-   uberQuoteId?: string; // নতুন যোগ করা হয়েছে
-  uberFee?: number; // নতুন যোগ করা হয়েছে
+   uberQuoteId?: string;
+  uberFee?: number;
 }) => {
   const { userId, specialPromoId, quantity, orderType, customerEmail, shippingAddress, pickupTime, notes,uberQuoteId, uberFee } = input;
 
@@ -439,7 +439,7 @@ const contact = user.contact;
     user: userId,
     items: orderItems,
     subtotal,
-    deliveryFee,
+    deliveryFee:uberFee||deliveryFee,
     totalAmount,
     totalPoints,
     orderType,
@@ -453,7 +453,7 @@ const contact = user.contact;
     pickupTime: orderType === OrderType.PICKUP ? pickupTime : undefined,
     notes,
     uberQuoteId: uberQuoteId,
-    uberFee: deliveryFee,
+    uberFee: uberFee||deliveryFee,
     statusHistory: [{
       status: OrderStatus.ONGOING,
       timestamp: new Date(),
@@ -603,29 +603,23 @@ for (const item of order.items) {
 // Uber Rider Dispatch Logic
 if (order.orderType === OrderType.DELIVERY && order.uberQuoteId) {
   try {
-    const uberResponse = await UberService.createUberDeliveryOrder(order, order.uberQuoteId);
+    const uberPayload = {
+      customerName: order.customerName,
+      customerPhone: order.customerPhone,
+      fullAddress: `${order.shippingAddress?.line1}, ${order.shippingAddress?.city}`,
+      items: order.items
+    };
+    
+    const uberResponse = await UberService.createUberDeliveryOrder(uberPayload, order.uberQuoteId);
     
     if (uberResponse) {
-      // এখানে uberResponse.id এর বদলে uberResponse.deliveryId ব্যবহার করুন
-      order.uberDeliveryId = uberResponse.deliveryId; 
-      order.uberTrackingUrl = uberResponse.tracking_url; // Flutter এ লাইভ ম্যাপ দেখাবে
+      order.uberDeliveryId = uberResponse.deliveryId;
+      order.uberTrackingUrl = uberResponse.tracking_url;
       order.uberStatus = uberResponse.status;
-      await order.save(); // উবার ডাটা সেভ করুন
-
-      await sendNotification(
-        order.user.toString(),
-        'Rider On The Way! 🛵',
-        `Your Uber rider has been assigned. Track your delivery here: ${uberResponse.tracking_url}`,
-        'order'
-      );
+      await order.save(); // এখানে ডাটাবেজে সেভ হচ্ছে
     }
-  } catch (uberError: any) {
-    console.error("Uber Dispatch Failed in handlePaymentSuccess:", uberError);
-    await sendNotificationToAdmins(
-      'Uber Dispatch Failed! ❌',
-      `Failed to dispatch Uber rider for order ${order.orderNumber}. Reason: ${uberError.message}`,
-      'order'
-    );
+  } catch (uberError) {
+    console.error("Uber Dispatch Error:", uberError);
   }
 }
 

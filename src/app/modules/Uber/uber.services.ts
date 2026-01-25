@@ -58,16 +58,24 @@ export const getUberDeliveryQuote = async (pickupAddress: string, dropoffAddress
 };
 
 export const createUberDeliveryOrder = async (order: any, quoteId: string) => {
-  if (IS_MOCK_MODE) {
+  // if (IS_MOCK_MODE) {
+  //   return {
+  //     deliveryId: "del_mock_" + Math.random().toString(36).substring(7),
+  //     status: "pickup",
+  //     tracking_url: "https://www.uber.com/lookup/tracking-demo", // এই লিঙ্কটি ফ্লুটারে দেখাবেন
+  //     courier_name: "John Rider (Demo)",
+  //     fee: 12.50
+  //   };
+  // }
+ if (IS_MOCK_MODE) {
     return {
-      deliveryId: "del_mock_" + Math.random().toString(36).substring(7),
+      deliveryId: "del_mock_" + Date.now(),
       status: "pickup",
-      tracking_url: "https://www.uber.com/lookup/tracking-demo", // এই লিঙ্কটি ফ্লুটারে দেখাবেন
-      courier_name: "John Rider (Demo)",
-      fee: 12.50
+      tracking_url: "https://www.uber.com/lookup/tracking-demo",
+      courier_name: "John Rider (Demos)",
+  fee: 13.50
     };
   }
-
   const token = await getUberToken();
   try {
     const response = await axios.post(

@@ -9,6 +9,7 @@ import sendEmail from '../../utils/sendEmail';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { sendNotification, sendNotificationToAdmins } from '../../utils/sendNotification';
 import { UserModel } from '../User/user.model';
+import { UberService } from '../Uber/uber.services';
 
 const stripe = new Stripe(config.stripe_secret_key as string);
 
@@ -43,7 +44,8 @@ const getAllPackagesFromDB = async (query: Record<string, unknown>) => {
 
 // --- User: Reservation Logic ---
 const createCheckoutSession = async (userId: string, payload: any) => {
-  const { packageId, guestCount, eventDate, venueAddress, contactNumber, customerEmail, notes } = payload;
+  const { packageId, guestCount, eventDate, venueAddress, contactNumber, customerEmail, notes,  uberQuoteId,
+    uberFee   } = payload;
 
   const pkg = await CateringPackageModel.findById(packageId);
   if (!pkg) throw new AppError(httpStatus.NOT_FOUND, 'Package not found');
@@ -60,6 +62,8 @@ const createCheckoutSession = async (userId: string, payload: any) => {
     venueAddress,
     contactNumber,
     notes,
+       uberQuoteId, // সেভ হচ্ছে
+    uberFee      // সেভ হচ্ছে
   });
 const user = await UserModel.findById(userId);
 if (!user) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
@@ -77,7 +81,8 @@ const fullName = user.fullName || `${user.firstName} ${user.lastName}`;
       },
       quantity: 1,
     }],
-    metadata: { bookingId: booking._id.toString(),   customerName: fullName ,type: 'catering' },
+    // metadata: { bookingId: booking._id.toString(),   customerName: fullName ,type: 'catering' },
+      metadata: { bookingId: booking._id.toString(), type: 'catering', uberQuoteId: uberQuoteId },
     success_url: `${config.frontend_url}/catering/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${config.frontend_url}/catering/cancel`,
   });
@@ -94,6 +99,22 @@ const handlePaymentSuccess = async (bookingId: string) => {
 
   booking.paymentStatus = CateringPaymentStatus.PAID;
   booking.status = BookingStatus.CONFIRMED;
+   // উবার রাইডার ডিসপ্যাচ
+  if (booking.uberQuoteId) {
+    const user = booking.user as any;
+    const uberPayload = {
+      customerName: user.fullName || user.firstName,
+      customerPhone: booking.contactNumber,
+      fullAddress: booking.venueAddress,
+      items: [{ name: (booking.package as any).name, quantity: 1 }]
+    };
+    const uberRes = await UberService.createUberDeliveryOrder(uberPayload, booking.uberQuoteId);
+    if (uberRes) {
+      booking.uberDeliveryId = uberRes.deliveryId;
+      booking.uberTrackingUrl = uberRes.tracking_url;
+      booking.uberStatus = uberRes.status;
+    }
+  }
   await booking.save();
 
   const packageInfo = booking.package as any;
