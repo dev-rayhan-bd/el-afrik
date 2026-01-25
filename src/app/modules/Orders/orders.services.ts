@@ -600,33 +600,34 @@ for (const item of order.items) {
 
 
   // Uber Rider Dispatch Logic
-  if (order.orderType === OrderType.DELIVERY && order.uberQuoteId) {
-    try {
-      const uberResponse = await UberService.createUberDeliveryOrder(order, order.uberQuoteId);
-      
-      if (uberResponse) {
-        order.uberDeliveryId = uberResponse.id;
-        order.uberTrackingUrl = uberResponse.tracking_url; // Flutter এ লাইভ ম্যাপ দেখাবে
-        order.uberStatus = uberResponse.status;
-        await order.save(); // উবার ডাটা সেভ করুন
+// Uber Rider Dispatch Logic
+if (order.orderType === OrderType.DELIVERY && order.uberQuoteId) {
+  try {
+    const uberResponse = await UberService.createUberDeliveryOrder(order, order.uberQuoteId);
+    
+    if (uberResponse) {
+      // এখানে uberResponse.id এর বদলে uberResponse.deliveryId ব্যবহার করুন
+      order.uberDeliveryId = uberResponse.deliveryId; 
+      order.uberTrackingUrl = uberResponse.tracking_url; // Flutter এ লাইভ ম্যাপ দেখাবে
+      order.uberStatus = uberResponse.status;
+      await order.save(); // উবার ডাটা সেভ করুন
 
-        await sendNotification(
-          order.user.toString(),
-          'Rider Dispatched! 🛵',
-          `Your Uber rider has been assigned. Track your delivery here: ${uberResponse.tracking_url}`,
-          'order'
-        );
-      }
-    } catch (uberError:any) {
-      console.error("Uber Dispatch Failed in handlePaymentSuccess:", uberError);
-      // এখানে এডমিনকে নোটিফিকেশন দেওয়া উচিত যে উবার রাইডার পাওয়া যায়নি
-      await sendNotificationToAdmins(
-        'Uber Dispatch Failed! ❌',
-        `Failed to dispatch Uber rider for order ${order.orderNumber}. Reason: ${uberError.message}`,
+      await sendNotification(
+        order.user.toString(),
+        'Rider On The Way! 🛵',
+        `Your Uber rider has been assigned. Track your delivery here: ${uberResponse.tracking_url}`,
         'order'
       );
     }
+  } catch (uberError: any) {
+    console.error("Uber Dispatch Failed in handlePaymentSuccess:", uberError);
+    await sendNotificationToAdmins(
+      'Uber Dispatch Failed! ❌',
+      `Failed to dispatch Uber rider for order ${order.orderNumber}. Reason: ${uberError.message}`,
+      'order'
+    );
   }
+}
 
 
 
