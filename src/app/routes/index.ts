@@ -18,6 +18,7 @@ import { CateringRoutes } from '../modules/CateringBooking/cateringBooking.route
 import { BirthdayRoutes } from '../modules/Birthday/birthday.routes';
 import { NotificationRoutes } from '../modules/Notification/notification.routes';
 import { QRCodeRoutes } from '../modules/QRcode/qrcode.routes';
+import { AdsRoutes } from '../modules/Ads/ads.routes';
 
 
 
@@ -101,7 +102,12 @@ const moduleRoutes = [
   {
   path: '/qrcode',
   route: QRCodeRoutes
-}
+},
+  {
+  path: '/ads',
+  route: AdsRoutes
+},
+
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
