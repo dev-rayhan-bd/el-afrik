@@ -27,6 +27,7 @@ import { RewardServices } from "../Reward/reward.services";
 import { PointSource } from "../Reward/reward.interface";
 import { sendNotification, sendNotificationToAdmins } from "../../utils/sendNotification";
 import { SpecialPromoModel } from "../SpecialPromo/specialpromo.model";
+import { UberService } from "../Uber/uber.services";
 
 const stripe = new Stripe(config.stripe_secret_key as string);
 
@@ -41,6 +42,8 @@ const createCheckoutSession = async (input: ICreateOrderInput) => {
     shippingAddress,
     pickupTime,
     notes,
+     uberQuoteId,
+    uberFee 
   } = input;
 
   const cart = await CartModel.findOne({ user: userId }).populate(
@@ -113,6 +116,20 @@ if (!user) throw new AppError(httpStatus.NOT_FOUND, "User not found");
 
 const fullName = user.fullName || `${user.firstName} ${user.lastName}`;
 const contact = user.contact;
+
+
+
+  if (orderType === OrderType.DELIVERY && uberFee !== undefined) {
+    totalDeliveryFee = uberFee; // উবার থেকে প্রাপ্ত ডেলিভারি ফি
+  } else if (orderType === OrderType.DELIVERY) {
+    // যদি uberFee না আসে, তবে আপনার ডিফল্ট ডেলিভারি ফি ক্যালকুলেশন
+    for (const cartItem of cart.items) {
+      const product = await ProductModel.findById(cartItem.product);
+      if (product) totalDeliveryFee += (product.deliveryFee || 0) * cartItem.quantity;
+    }
+  }
+
+
   const totalAmount = parseFloat((subtotal + totalDeliveryFee).toFixed(2));
 
   const order = await OrderModel.create({
@@ -137,6 +154,8 @@ const contact = user.contact;
       orderType === OrderType.DELIVERY ? shippingAddress : undefined,
     pickupTime: orderType === OrderType.PICKUP ? pickupTime : undefined,
     notes,
+     uberQuoteId: uberQuoteId, // উবার কোট আইডি সেভ করা হয়েছে
+    uberFee: totalDeliveryFee, // উবারের ফি সেভ করা হয়েছে
     statusHistory: [
       {
         status: OrderStatus.ONGOING,
@@ -183,7 +202,11 @@ const contact = user.contact;
       allowed_countries: ["BD", "US"],
     };
   }
-
+  // Stripe session metadata-তেও uberQuoteId যোগ করা যেতে পারে যদি দরকার হয়
+  sessionConfig.metadata = {
+    ...sessionConfig.metadata,
+    uberQuoteId: uberQuoteId as string // Stripe webhook এ কাজে লাগতে পারে
+  };
   const session = await stripe.checkout.sessions.create(sessionConfig);
 
   order.stripeSessionId = session.id;
@@ -214,9 +237,12 @@ const createSingleProductCheckoutSession = async (input: {
   shippingAddress?: IShippingAddress;
   pickupTime?: string;
   notes?: string;
+    uberQuoteId?: string; // নতুন যোগ করা হয়েছে
+  uberFee?: number; // নতুন যোগ করা হয়েছে
 
 }) => {
-  const { userId, productId, quantity, orderType, customerEmail, shippingAddress, pickupTime, notes } = input;
+  const { userId, productId, quantity, orderType, customerEmail, shippingAddress, pickupTime, notes,  uberQuoteId,
+    uberFee  } = input;
 
   const product = await ProductModel.findById(productId);
   if (!product) {
@@ -237,7 +263,19 @@ const fullName = user.fullName || `${user.firstName} ${user.lastName}`;
 const contact = user.contact;
   const subtotal = parseFloat((unitPrice * quantity).toFixed(2));
   const totalPoints = (product.points || 0) * quantity;
-  const deliveryFee = orderType === OrderType.DELIVERY ? (product.deliveryFee || 0) * quantity : 0;
+  // const deliveryFee = orderType === OrderType.DELIVERY ? (product.deliveryFee || 0) * quantity : 0;
+
+
+
+let deliveryFee = 0;
+  if (orderType === OrderType.DELIVERY && uberFee !== undefined) {
+    deliveryFee = uberFee;
+  } else if (orderType === OrderType.DELIVERY) {
+    deliveryFee = (product.deliveryFee || 0) * quantity;
+  }
+
+
+
   const totalAmount = parseFloat((subtotal + deliveryFee).toFixed(2));
 
   const orderItems: IOrderItem[] = [{
@@ -267,6 +305,8 @@ const contact = user.contact;
     shippingAddress: orderType === OrderType.DELIVERY ? shippingAddress : undefined,
     pickupTime: orderType === OrderType.PICKUP ? pickupTime : undefined,
     notes,
+    uberQuoteId: uberQuoteId,
+    uberFee: deliveryFee,
     statusHistory: [{
       status: OrderStatus.ONGOING,
       timestamp: new Date(),
@@ -331,8 +371,10 @@ const createSpecialPromoCheckoutSession = async (input: {
   shippingAddress?: IShippingAddress;
   pickupTime?: string;
   notes?: string;
+   uberQuoteId?: string; // নতুন যোগ করা হয়েছে
+  uberFee?: number; // নতুন যোগ করা হয়েছে
 }) => {
-  const { userId, specialPromoId, quantity, orderType, customerEmail, shippingAddress, pickupTime, notes } = input;
+  const { userId, specialPromoId, quantity, orderType, customerEmail, shippingAddress, pickupTime, notes,uberQuoteId, uberFee } = input;
 
   const promo = await SpecialPromoModel.findById(specialPromoId).populate('product');
   if (!promo) {
@@ -370,7 +412,17 @@ const contact = user.contact;
 
   const subtotal = parseFloat((unitPrice * quantity).toFixed(2));
   const totalPoints = (product.points || 0) * quantity;
-  const deliveryFee = orderType === OrderType.DELIVERY ? (product.deliveryFee || 0) * quantity : 0;
+  // const deliveryFee = orderType === OrderType.DELIVERY ? (product.deliveryFee || 0) * quantity : 0;
+
+
+  let deliveryFee = 0;
+  if (orderType === OrderType.DELIVERY && uberFee !== undefined) {
+    deliveryFee = uberFee;
+  } else if (orderType === OrderType.DELIVERY) {
+    deliveryFee = (product.deliveryFee || 0) * quantity;
+  }
+
+
   const totalAmount = parseFloat((subtotal + deliveryFee).toFixed(2));
 
   const orderItems: IOrderItem[] = [{
@@ -400,6 +452,8 @@ const contact = user.contact;
     shippingAddress: orderType === OrderType.DELIVERY ? shippingAddress : undefined,
     pickupTime: orderType === OrderType.PICKUP ? pickupTime : undefined,
     notes,
+    uberQuoteId: uberQuoteId,
+    uberFee: deliveryFee,
     statusHistory: [{
       status: OrderStatus.ONGOING,
       timestamp: new Date(),
@@ -543,6 +597,40 @@ for (const item of order.items) {
     });
   }
 }
+
+
+  // Uber Rider Dispatch Logic
+  if (order.orderType === OrderType.DELIVERY && order.uberQuoteId) {
+    try {
+      const uberResponse = await UberService.createUberDeliveryOrder(order, order.uberQuoteId);
+      
+      if (uberResponse) {
+        order.uberDeliveryId = uberResponse.id;
+        order.uberTrackingUrl = uberResponse.tracking_url; // Flutter এ লাইভ ম্যাপ দেখাবে
+        order.uberStatus = uberResponse.status;
+        await order.save(); // উবার ডাটা সেভ করুন
+
+        await sendNotification(
+          order.user.toString(),
+          'Rider Dispatched! 🛵',
+          `Your Uber rider has been assigned. Track your delivery here: ${uberResponse.tracking_url}`,
+          'order'
+        );
+      }
+    } catch (uberError:any) {
+      console.error("Uber Dispatch Failed in handlePaymentSuccess:", uberError);
+      // এখানে এডমিনকে নোটিফিকেশন দেওয়া উচিত যে উবার রাইডার পাওয়া যায়নি
+      await sendNotificationToAdmins(
+        'Uber Dispatch Failed! ❌',
+        `Failed to dispatch Uber rider for order ${order.orderNumber}. Reason: ${uberError.message}`,
+        'order'
+      );
+    }
+  }
+
+
+
+
 
   if (order.totalPoints > 0 && !order.pointsAdded) {
   try {

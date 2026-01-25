@@ -26,4 +26,8 @@ export default {
   aws_secret_key: process.env.AWS_SECRET_ACCESS_KEY,
   aws_bucket_name: process.env.AWS_BUCKET_NAME,
   aws_region: process.env.AWS_REGION,
+  uber_env:process.env.UBER_ENV,
+  uber_client_id:process.env.UBER_CLIENT_ID,
+  uber_customer_id:process.env.UBER_CUSTOMER_ID,
+  uber_client_secret:process.env.UBER_CLIENT_SECRET
 };

@@ -6,23 +6,17 @@ import { AdsServices } from './ads.services';
 import uploadImage from '../../middleware/upload';
 
 const createAds = catchAsync(async (req: Request, res: Response) => {
-  const files = req.files as Express.Multer.File[];
-
-  if (!files || files.length === 0) {
-    throw new Error('Please upload at least one image');
+  let imageUrl: string = "";
+  if (req.file) {
+    imageUrl = await uploadImage(req);
   }
 
-
-  const imageUrls = await Promise.all(
-    files.map((file) => uploadImage(req, file))
-  );
-
-  const result = await AdsServices.createAdsIntoDB({ images: imageUrls });
+  const result = await AdsServices.createAdsIntoDB({ image: imageUrl });
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
-    message: 'Ads posted successfully',
+    message: 'Ad posted successfully',
     data: result,
   });
 });

@@ -164,7 +164,7 @@ const purchaseWithPoints = async (input: IPointRedemptionInput) => {
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
-
+  const fullName = user.fullName || `${user.firstName} ${user.lastName}`;
   if (deliveryType === 'delivery' && !shippingAddress) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
@@ -211,7 +211,7 @@ const purchaseWithPoints = async (input: IPointRedemptionInput) => {
     paymentStatus: PaymentStatus.POINTS_PAID,
     paymentMethod: PaymentMethod.POINTS,
     customerEmail: user.email,
-    customerName: `${user.firstName} ${user.lastName}`,
+    customerName: fullName,
     customerPhone: user.contact,
     shippingAddress: deliveryType === 'delivery' ? shippingAddress : undefined,
     pickupTime: deliveryType === 'pickup' ? pickupTime : undefined,

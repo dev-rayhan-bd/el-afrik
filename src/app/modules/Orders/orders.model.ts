@@ -184,10 +184,15 @@ const OrderSchema = new Schema<IOrderDocument>(
     cancelledAt: Date,
     estimatedTime: String,
     notes: String,
+      uberQuoteId: String,
+    uberDeliveryId: String,
+    uberTrackingUrl: String,
+    uberStatus: String,
+    uberFee: { type: Number, default: 0 },
   },
   {
     timestamps: true,
-    toJSON: { virtuals: true },
+       toJSON: { virtuals: true },
     toObject: { virtuals: true },
   }
 );

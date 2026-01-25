@@ -51,6 +51,16 @@ auth(USER_ROLE.user,USER_ROLE.superAdmin),
 // Get single order (must be placed after specific routes)
 router.get('/:id',auth(USER_ROLE.user,USER_ROLE.superAdmin), OrderController.getOrderById);
 
+
+
+// ১. ডেলিভারি ফি জানার জন্য নতুন রাউট
+router.post('/get-delivery-fee', auth(USER_ROLE.user), OrderController.getDeliveryFee);
+
+// ২. উবার ওয়েবহুকের জন্য নতুন রাউট (কোনো Auth লাগবে না)
+router.post('/uber-webhook', OrderController.handleUberWebhook);
+
+
+
 // ═══════════════════════════════════════════════════════════════════════
 // ADMIN ROUTES
 // ═══════════════════════════════════════════════════════════════════════

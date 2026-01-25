@@ -84,6 +84,11 @@ export interface IOrder {
   pointsAdded: boolean;
   estimatedTime?: string;
   notes?: string;
+    uberQuoteId?: string;       // uber deliver quote id
+  uberDeliveryId?: string;    // uber delivery id
+  uberTrackingUrl?: string;   // rider traking 
+  uberStatus?: string;        // uber delivery status ('picking_up', 'dropping_off', 'delivered')
+  uberFee?: number;  
 }
 
 export interface IOrderDocument extends IOrder, Document {
@@ -101,6 +106,8 @@ export interface ICreateOrderInput {
   shippingAddress?: IShippingAddress;
   pickupTime?: string;
   notes?: string;
+   uberQuoteId?:string, 
+    uberFee?:number
 }
 
 export interface IPointRedemptionInput {

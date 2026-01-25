@@ -7,6 +7,9 @@ import catchAsync from '../../utils/catchAsync';
 import { OrderStatus, OrderType } from './orders.interface';
 import { OrderService } from './orders.services';
 import AppError from '../../errors/AppError';
+import { UberService } from '../Uber/uber.services';
+import { OrderModel } from './orders.model';
+import { sendNotification } from '../../utils/sendNotification';
 
 
 
@@ -329,6 +332,67 @@ const getOrderByIdAdmin = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+// ═══════════════════════════════════════════════════════════════════════
+// UBER
+// ═══════════════════════════════════════════════════════════════════════
+
+
+
+// ১. ডেলিভারি ফি জানার জন্য নতুন কন্ট্রোলার
+const getDeliveryFee = catchAsync(async (req: Request, res: Response) => {
+  const { pickupAddress, dropoffAddress } = req.body; // ফ্রন্টএন্ড থেকে রেস্টুরেন্ট এবং ইউজারের এড্রেস আসবে
+
+  const quote = await UberService.getUberDeliveryQuote(pickupAddress, dropoffAddress);
+  
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Delivery fee calculated successfully',
+    data: {
+      fee: quote.fee, // সার্ভিস থেকে ডলারে কনভার্ট হয়ে আসছে
+      quoteId: quote.quoteId,
+      estimatedDuration: quote.duration // আনুমানিক সময়
+    },
+  });
+});
+
+// ২. উবার ওয়েবহুক হ্যান্ডেল করার জন্য নতুন কন্ট্রোলার
+const handleUberWebhook = catchAsync(async (req: Request, res: Response) => {
+  const { delivery_id, status } = req.body; // উবার থেকে আসা ডাটা
+
+  // ডেলিভারি আইডি দিয়ে অর্ডারটি খুঁজুন
+  const order = await OrderModel.findOne({ uberDeliveryId: delivery_id });
+  if (order) {
+    order.uberStatus = status; // উবার থেকে আসা স্ট্যাটাস সেভ করুন
+    
+    if (status === 'delivered') {
+      order.orderStatus = OrderStatus.DELIVERED;
+      order.deliveredAt = new Date();
+    }
+    // অন্য কোনো স্ট্যাটাস যেমন 'picking_up', 'dropping_off' ইত্যাদি
+    await order.save();
+
+    await sendNotification(
+      order.user.toString(),
+      'Delivery Update 🚚',
+      `Your Uber delivery status: ${status.replace(/_/g, ' ')}.`,
+      'order'
+    );
+  }
+  res.status(200).send('Webhook Received'); // উবারকে 200 OK রেসপন্স পাঠান
+});
+
+
+
+
+
+
+
+
+
+
+
 // ═══════════════════════════════════════════════════════════════════════
 // EXPORT
 // ═══════════════════════════════════════════════════════════════════════
@@ -345,6 +409,8 @@ export const OrderController = {
   getOrderStats,
   updateOrderStatus,
   getOrderByIdAdmin,
-  createPromoCheckout
+  createPromoCheckout,
+  getDeliveryFee,       
+  handleUberWebhook 
 
 };

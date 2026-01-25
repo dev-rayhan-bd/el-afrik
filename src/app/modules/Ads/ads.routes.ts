@@ -9,7 +9,7 @@ const router = express.Router();
 router.post(
   '/create-ads',
 
-  upload.array('images', 12), 
+  upload.array('image', 12), 
   (req: Request, res: Response, next: NextFunction) => {
     try {
       if (req.body.body) {

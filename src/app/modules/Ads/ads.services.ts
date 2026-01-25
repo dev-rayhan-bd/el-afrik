@@ -1,8 +1,9 @@
 import { AdsModel } from './ads.model';
 import AppError from '../../errors/AppError';
 import httpStatus from 'http-status';
+import { IAds } from './ads.interface';
 
-const createAdsIntoDB = async (payload: { images: string[] }) => {
+const createAdsIntoDB = async (payload: Partial<IAds>) => {
   return await AdsModel.create(payload);
 };
 
