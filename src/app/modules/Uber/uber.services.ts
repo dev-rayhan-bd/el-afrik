@@ -15,7 +15,7 @@ const getUberToken = async () => {
     client_id: config.uber_client_id as string,
     client_secret: config.uber_client_secret as string,
     grant_type: 'client_credentials',
-    scope: 'delivery',
+    // scope: 'delivery',
   });
 
   try {
