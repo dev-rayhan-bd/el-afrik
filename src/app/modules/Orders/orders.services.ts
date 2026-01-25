@@ -606,7 +606,7 @@ if (order.orderType === OrderType.DELIVERY && order.uberQuoteId) {
     const uberPayload = {
       customerName: order.customerName,
       customerPhone: order.customerPhone,
-      fullAddress: `${order.shippingAddress?.line1}, ${order.shippingAddress?.city}`,
+      fullAddress: `${order.shippingAddress?.line1}, ${order.shippingAddress?.city}`, 
       items: order.items
     };
     
@@ -616,6 +616,7 @@ if (order.orderType === OrderType.DELIVERY && order.uberQuoteId) {
       order.uberDeliveryId = uberResponse.deliveryId;
       order.uberTrackingUrl = uberResponse.tracking_url;
       order.uberStatus = uberResponse.status;
+      
       await order.save(); 
     }
   } catch (uberError) {
