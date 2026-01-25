@@ -7,4 +7,5 @@ export interface ISpecialPromo {
   discountType: 'percentage' | 'fixed';
   discountAmount: number;
   validity: Date;
+  type:string;
 }

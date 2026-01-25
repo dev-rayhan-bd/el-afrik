@@ -7,6 +7,7 @@ const SpecialPromoSchema = new Schema<ISpecialPromo>({
   discountType: { type: String, enum: ['percentage', 'fixed'], required: true },
   discountAmount: { type: Number, required: true },
   validity: { type: Date, required: true },
+  type: { type: String,enum: ['holiday', 'weekend','limited'], required: true },
 }, { timestamps: true });
 
 SpecialPromoSchema.index({ validity: 1 }, { expireAfterSeconds: 0 });

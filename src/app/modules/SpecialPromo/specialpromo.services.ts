@@ -54,6 +54,7 @@ const getAllSpecialPromos = async (query: Record<string, unknown>) => {
 
 const deleteSpecialPromo = async (id: string) => {
   const result = await SpecialPromoModel.findByIdAndDelete(id);
+
   if (!result) {
     throw new AppError(httpStatus.NOT_FOUND, 'Promo not found');
   }
