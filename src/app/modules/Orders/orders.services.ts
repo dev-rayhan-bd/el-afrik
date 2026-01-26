@@ -197,11 +197,11 @@ const contact = user.contact;
     cancel_url: `${baseUrl}/order/cancel?order=${order.orderNumber}`,
   };
 
-  if (orderType === OrderType.DELIVERY) {
-    sessionConfig.shipping_address_collection = {
-      allowed_countries: ["BD", "US"],
-    };
-  }
+  // if (orderType === OrderType.DELIVERY) {
+  //   sessionConfig.shipping_address_collection = {
+  //     allowed_countries: ["BD", "US"],
+  //   };
+  // }
  
   sessionConfig.metadata = {
     ...sessionConfig.metadata,
