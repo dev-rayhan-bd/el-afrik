@@ -120,6 +120,8 @@ export interface IPointRedemptionInput {
   shippingAddress?: IShippingAddress;
   pickupTime?: string;
   notes?: string;
+     uberQuoteId?: string;
+  uberFee?: number;
 }
 
 export interface IOrderFilters {

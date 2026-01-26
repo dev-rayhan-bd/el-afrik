@@ -55,7 +55,8 @@ const calculateRedemptionCost = catchAsync(
 
 const purchaseWithPoints = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user.userId;
-  const { items, deliveryType, shippingAddress, pickupTime, notes } = req.body;
+  const { items, deliveryType, shippingAddress, pickupTime, notes, uberQuoteId, 
+    uberFee  } = req.body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return sendResponse(res, {
@@ -82,6 +83,8 @@ const purchaseWithPoints = catchAsync(async (req: Request, res: Response) => {
     shippingAddress,
     pickupTime,
     notes,
+     uberQuoteId, 
+    uberFee 
   });
 
   sendResponse(res, {

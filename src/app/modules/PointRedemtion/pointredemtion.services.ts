@@ -18,7 +18,9 @@ import {
 import sendEmail from '../../utils/sendEmail';
 import config from '../../config';
 import { OrderModel } from '../Orders/orders.model';
+import Stripe from 'stripe';
 
+const stripe = new Stripe(config.stripe_secret_key as string);
 // ═══════════════════════════════════════════════════════════════════════
 // GET REDEEMABLE PRODUCTS
 // ═══════════════════════════════════════════════════════════════════════
@@ -156,132 +158,254 @@ const calculateRedemptionCost = async (
 // ═══════════════════════════════════════════════════════════════════════
 // PURCHASE WITH POINTS
 // ═══════════════════════════════════════════════════════════════════════
+// const purchaseWithPoints = async (input: IPointRedemptionInput) => {
+//   const { userId, items, deliveryType, shippingAddress, pickupTime, notes,uberQuoteId, uberFee } =
+//     input;
+
+//   const user = await UserModel.findById(userId);
+//   if (!user) {
+//     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+//   }
+//   const fullName = user.fullName || `${user.firstName} ${user.lastName}`;
+//   if (deliveryType === 'delivery' && !shippingAddress) {
+//     throw new AppError(
+//       httpStatus.BAD_REQUEST,
+//       'Shipping address is required for delivery'
+//     );
+//   }
+
+//   await RewardServices.checkAndExpirePoints(userId);
+
+//   const costCalculation = await calculateRedemptionCost(items, userId);
+
+//   if (!costCalculation.canRedeem) {
+//     throw new AppError(
+//       httpStatus.BAD_REQUEST,
+//       `Insufficient points. Required: ${costCalculation.totalPointsRequired}, Available: ${costCalculation.availablePoints}`
+//     );
+//   }
+
+//   const totalPointsRequired = costCalculation.totalPointsRequired;
+
+//   const orderItems: IOrderItem[] = costCalculation.items.map((item) => ({
+//     product: item.productId,
+//     name: item.name,
+//     image: item.image,
+//     price: item.price,
+//     quantity: item.quantity,
+//     total: item.monetaryValue,
+//     points: 0,
+//     pointsCost: item.totalPoints,
+//   }));
+
+//   const order = await OrderModel.create({
+//     user: userId,
+//     items: orderItems,
+//     subtotal: costCalculation.totalMonetaryValue,
+//     deliveryFee: 0,
+//     discount: costCalculation.totalMonetaryValue,
+//     totalAmount: 0,
+//     totalPoints: 0,
+//     pointsUsed: totalPointsRequired,
+//     pointsValue: costCalculation.totalMonetaryValue,
+//     orderType: OrderType.POINT_REDEMPTION,
+//     orderStatus: OrderStatus.ONGOING,
+//     paymentStatus: PaymentStatus.POINTS_PAID,
+//     paymentMethod: PaymentMethod.POINTS,
+//     customerEmail: user.email,
+//     customerName: fullName,
+//     customerPhone: user.contact,
+//     shippingAddress: deliveryType === 'delivery' ? shippingAddress : undefined,
+//     pickupTime: deliveryType === 'pickup' ? pickupTime : undefined,
+//     redemptionDeliveryType: deliveryType,
+//     paidAt: new Date(),
+//     pointsAdded: true,
+//     notes,
+//     statusHistory: [
+//       {
+//         status: OrderStatus.ONGOING,
+//         timestamp: new Date(),
+//         note: `Redeemed with ${totalPointsRequired} points (${deliveryType})`,
+//       },
+//     ],
+//   });
+
+//   await RewardServices.redeemPoints({
+//     userId,
+//     points: totalPointsRequired,
+//     orderId: order._id.toString(),
+//     orderNumber: order.orderNumber,
+//     description: `Redeemed ${items.length} item(s) using ${totalPointsRequired} points`,
+//   });
+
+// for (const item of items) {
+
+//   const product = await ProductModel.findByIdAndUpdate(
+//     item.productId,
+//     { $inc: { quantity: -item.quantity } },
+//     { new: true }
+//   );
+
+
+//   if (product && product.quantity <= 0) {
+//     await ProductModel.findByIdAndUpdate(item.productId, {
+//       $set: { status: 'out_of_stock', quantity: 0 }
+//     });
+//   }
+// }
+
+//   await sendRedemptionConfirmationEmail(order, user);
+
+//   console.log(
+//     `🎁 Point redemption order created: ${order.orderNumber} for ${totalPointsRequired} points`
+//   );
+
+//   const remainingPoints =
+//     costCalculation.availablePoints - totalPointsRequired;
+
+//   return {
+//     success: true,
+//     order: {
+//       _id: order._id,
+//       orderNumber: order.orderNumber,
+//       items: orderItems.map((item) => ({
+//         name: item.name,
+//         quantity: item.quantity,
+//         pointsCost: item.pointsCost,
+//       })),
+//       pointsUsed: totalPointsRequired,
+//       monetaryValue: costCalculation.totalMonetaryValue,
+//       deliveryType,
+//       orderStatus: order.orderStatus,
+//       createdAt: order.createdAt,
+//     },
+//     remainingPoints,
+//     message: `Successfully redeemed with ${totalPointsRequired} points!`,
+//   };
+// };
 const purchaseWithPoints = async (input: IPointRedemptionInput) => {
-  const { userId, items, deliveryType, shippingAddress, pickupTime, notes } =
-    input;
+  const { userId, items, deliveryType, shippingAddress, pickupTime, notes, uberQuoteId, uberFee } = input;
 
   const user = await UserModel.findById(userId);
-  if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, 'User not found');
-  }
+  if (!user) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+
   const fullName = user.fullName || `${user.firstName} ${user.lastName}`;
-  if (deliveryType === 'delivery' && !shippingAddress) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      'Shipping address is required for delivery'
-    );
-  }
 
-  await RewardServices.checkAndExpirePoints(userId);
-
+  // ১. পয়েন্ট ক্যালকুলেশন
   const costCalculation = await calculateRedemptionCost(items, userId);
-
   if (!costCalculation.canRedeem) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      `Insufficient points. Required: ${costCalculation.totalPointsRequired}, Available: ${costCalculation.availablePoints}`
-    );
+    throw new AppError(httpStatus.BAD_REQUEST, `Insufficient points.`);
   }
 
   const totalPointsRequired = costCalculation.totalPointsRequired;
 
+  // ২. অর্ডার আইটেম তৈরি
   const orderItems: IOrderItem[] = costCalculation.items.map((item) => ({
     product: item.productId,
     name: item.name,
     image: item.image,
-    price: item.price,
+    price: 0, // আইটেম প্রাইস ০ কারণ এটি পয়েন্ট দিয়ে কেনা
     quantity: item.quantity,
-    total: item.monetaryValue,
+    total: 0,
     points: 0,
     pointsCost: item.totalPoints,
   }));
 
+  // ৩. ডেলিভারি অর্ডার হলে Stripe Session তৈরি করা
+  let stripeUrl = null;
+  let paymentStatus = PaymentStatus.POINTS_PAID; 
+
+  if (deliveryType === 'delivery') {
+    if (!uberFee || uberFee <= 0) {
+      throw new AppError(httpStatus.BAD_REQUEST, 'Delivery fee is required for delivery orders');
+    }
+    paymentStatus = PaymentStatus.PENDING; // ডেলিভারি ফি বাকি
+  }
+
+  // ৪. অর্ডার তৈরি (Database-এ)
   const order = await OrderModel.create({
     user: userId,
     items: orderItems,
-    subtotal: costCalculation.totalMonetaryValue,
-    deliveryFee: 0,
-    discount: costCalculation.totalMonetaryValue,
-    totalAmount: 0,
-    totalPoints: 0,
+    subtotal: 0,
+    deliveryFee: uberFee || 0,
+    totalAmount: uberFee || 0, // শুধুমাত্র ডেলিভারি ফি-ই হবে টোটাল এমাউন্ট
     pointsUsed: totalPointsRequired,
-    pointsValue: costCalculation.totalMonetaryValue,
     orderType: OrderType.POINT_REDEMPTION,
     orderStatus: OrderStatus.ONGOING,
-    paymentStatus: PaymentStatus.POINTS_PAID,
-    paymentMethod: PaymentMethod.POINTS,
+    paymentStatus: paymentStatus,
+    paymentMethod: PaymentMethod.POINTS, // মূল মেথড পয়েন্ট হলেও ডেলিভারি কার্ডে হবে
     customerEmail: user.email,
     customerName: fullName,
     customerPhone: user.contact,
     shippingAddress: deliveryType === 'delivery' ? shippingAddress : undefined,
     pickupTime: deliveryType === 'pickup' ? pickupTime : undefined,
     redemptionDeliveryType: deliveryType,
-    paidAt: new Date(),
-    pointsAdded: true,
+    uberQuoteId,
+    uberFee,
     notes,
-    statusHistory: [
-      {
-        status: OrderStatus.ONGOING,
-        timestamp: new Date(),
-        note: `Redeemed with ${totalPointsRequired} points (${deliveryType})`,
-      },
-    ],
   });
 
+  // ৫. ডেলিভারি টাইপ হলে Stripe Session জেনারেট করা
+  if (deliveryType === 'delivery') {
+     if (uberFee === undefined || uberFee === null) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Delivery fee is required for delivery orders');
+  }
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      customer_email: user.email,
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: { 
+            name: `Delivery Fee for Point Redemption`,
+            description: `Items: ${items.length} (Paid via Points)`
+          },
+          unit_amount: Math.round(uberFee * 100) ,
+        },
+        quantity: 1,
+      }],
+      metadata: { 
+        orderId: order._id.toString(), 
+        type: 'point_redemption_delivery' 
+      },
+      success_url: `${config.frontend_url}/order/success?session_id={CHECKOUT_SESSION_ID}&order=${order.orderNumber}`,
+      cancel_url: `${config.frontend_url}/order/cancel`,
+    });
+
+    order.stripeSessionId = session.id;
+    await order.save();
+    stripeUrl = session.url;
+
+    return {
+      success: true,
+      stripeUrl, // ফ্রন্টএন্ড এই লিংকে রিডাইরেক্ট করবে
+      message: 'Please pay the delivery fee to complete your redemption.'
+    };
+  }
+
+  // ৬. যদি Pickup হয় তবে এখনই পয়েন্ট কেটে অর্ডার কনফার্ম করা
   await RewardServices.redeemPoints({
     userId,
     points: totalPointsRequired,
     orderId: order._id.toString(),
     orderNumber: order.orderNumber,
-    description: `Redeemed ${items.length} item(s) using ${totalPointsRequired} points`,
+    description: `Redeemed items using ${totalPointsRequired} points`,
   });
 
-for (const item of items) {
-
-  const product = await ProductModel.findByIdAndUpdate(
-    item.productId,
-    { $inc: { quantity: -item.quantity } },
-    { new: true }
-  );
-
-
-  if (product && product.quantity <= 0) {
-    await ProductModel.findByIdAndUpdate(item.productId, {
-      $set: { status: 'out_of_stock', quantity: 0 }
-    });
+  // স্টক আপডেট
+  for (const item of items) {
+    await ProductModel.findByIdAndUpdate(item.productId, { $inc: { quantity: -item.quantity } });
   }
-}
 
   await sendRedemptionConfirmationEmail(order, user);
 
-  console.log(
-    `🎁 Point redemption order created: ${order.orderNumber} for ${totalPointsRequired} points`
-  );
-
-  const remainingPoints =
-    costCalculation.availablePoints - totalPointsRequired;
-
   return {
     success: true,
-    order: {
-      _id: order._id,
-      orderNumber: order.orderNumber,
-      items: orderItems.map((item) => ({
-        name: item.name,
-        quantity: item.quantity,
-        pointsCost: item.pointsCost,
-      })),
-      pointsUsed: totalPointsRequired,
-      monetaryValue: costCalculation.totalMonetaryValue,
-      deliveryType,
-      orderStatus: order.orderStatus,
-      createdAt: order.createdAt,
-    },
-    remainingPoints,
+    order,
     message: `Successfully redeemed with ${totalPointsRequired} points!`,
   };
 };
-
 // ═══════════════════════════════════════════════════════════════════════
 // GET MY REDEMPTION ORDERS
 // ═══════════════════════════════════════════════════════════════════════
@@ -459,4 +583,5 @@ export const PointRedemptionService = {
   getMyRedemptionOrders,
   getRedemptionOrderById,
   cancelRedemptionOrder,
+   sendRedemptionConfirmationEmail,
 };
