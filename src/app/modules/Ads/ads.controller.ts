@@ -4,12 +4,17 @@ import sendResponse from '../../utils/sendResponse';
 import httpStatus from 'http-status';
 import { AdsServices } from './ads.services';
 import uploadImage from '../../middleware/upload';
+import AppError from '../../errors/AppError';
 
 const createAds = catchAsync(async (req: Request, res: Response) => {
-  let imageUrl: string = "";
-  if (req.file) {
-    imageUrl = await uploadImage(req);
+
+  if (!req.file) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Please upload an image');
   }
+
+ 
+  const imageUrl = await uploadImage(req);
+
 
   const result = await AdsServices.createAdsIntoDB({ image: imageUrl });
 
