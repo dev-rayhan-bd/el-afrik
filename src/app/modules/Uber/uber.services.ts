@@ -7,8 +7,8 @@ const UBER_TOKEN_URL = 'https://login.uber.com/oauth/v2/token';
 const UBER_API_BASE = 'https://api.uber.com/v1/customers';
 
 const RESTAURANT_ADDRESS = "8882 170 St NW, Edmonton, AB T5T 3J7, Canada";
-// --- এটি MOCK MODE সুইচ ---
-// পারমিশন না পাওয়া পর্যন্ত এটি true রাখুন, পেলে false করে দিবেন।
+// --- MOCK MODE---
+
 const IS_MOCK_MODE = true; 
 
 const getUberToken = async () => {
@@ -31,7 +31,7 @@ const getUberToken = async () => {
 
 export const getUberDeliveryQuote = async (dropoffAddress: string) => {
   if (IS_MOCK_MODE) {
-    // ফেক রেসপন্স যাতে ফ্রন্টএন্ড কাজ করতে পারে
+
     return {
       quoteId: "quote_mock_" + Math.random().toString(36).substring(7),
       fee: 12.50,
@@ -59,22 +59,28 @@ export const getUberDeliveryQuote = async (dropoffAddress: string) => {
 };
 
 export const createUberDeliveryOrder = async (order: any, quoteId: string) => {
-  // if (IS_MOCK_MODE) {
-  //   return {
-  //     deliveryId: "del_mock_" + Math.random().toString(36).substring(7),
-  //     status: "pickup",
-  //     tracking_url: "https://www.uber.com/lookup/tracking-demo", // এই লিঙ্কটি ফ্লুটারে দেখাবেন
-  //     courier_name: "John Rider (Demo)",
-  //     fee: 12.50
-  //   };
-  // }
+
+//  if (IS_MOCK_MODE) {
+//     return {
+//       deliveryId: "del_mock_" + Date.now(),
+//       status: "pickup",
+//       tracking_url: "https://www.uber.com/lookup/tracking-demo",
+//       courier_name: "John Rider (Demos)",
+//   fee: 13.50
+//     };
+//   }
  if (IS_MOCK_MODE) {
+
+    const pickup = RESTAURANT_ADDRESS.replace(/ /g, '+');
+    const dropoff = `${order.shippingAddress?.line1}, ${order.shippingAddress?.city}`.replace(/ /g, '+');
+
     return {
       deliveryId: "del_mock_" + Date.now(),
       status: "pickup",
-      tracking_url: "https://www.uber.com/lookup/tracking-demo",
-      courier_name: "John Rider (Demos)",
-  fee: 13.50
+
+      tracking_url: `https://www.google.com/maps/dir/${pickup}/${dropoff}`, 
+      courier_name: "John Rider (Simulation Mode)",
+      fee: 13.50
     };
   }
   const token = await getUberToken();
