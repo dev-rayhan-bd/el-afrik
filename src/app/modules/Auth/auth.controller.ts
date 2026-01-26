@@ -85,6 +85,23 @@ const userLogin=catchAsync(async(req,res)=>{
         data: result,
       });
 })
+const AdminLogin=catchAsync(async(req,res)=>{
+  const result = await AuthServices.loginAdmin(req.body);
+
+//set refress token on cookies
+  res.cookie('refreshToken', result.refreshToken, {
+    secure: config.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'none',
+    maxAge: 1000 * 60 * 60 * 24 * 365,
+  });
+    sendResponse(res, {
+        success: true,
+        message: 'User Logged in Successfully',
+        statusCode: httpStatus.OK,
+        data: result,
+      });
+})
 
 const changePassword = catchAsync(async (req, res) => {
     const { ...passwordData } = req.body;
@@ -161,5 +178,5 @@ const verifyYourOTP = catchAsync(async (req:Request, res:Response) => {
   });
 
 export const AuthControllers = {
-  registerUser,userLogin,changePassword,refreshToken,forgotPassword,verifyYourOTP,resetPassword,VerifyOtpForRegistration,resendOtp
+  registerUser,userLogin,changePassword,refreshToken,forgotPassword,verifyYourOTP,resetPassword,VerifyOtpForRegistration,resendOtp,AdminLogin
 };

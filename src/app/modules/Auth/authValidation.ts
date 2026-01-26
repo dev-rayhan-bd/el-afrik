@@ -50,6 +50,7 @@ const dobSchema = z
 const loginValidationSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, { message: "Password is required" }),
+    fcmToken: z.string({ message: "fcmToken is required" }).trim(),
 });
 
 export const registerUserValidationSchema = z

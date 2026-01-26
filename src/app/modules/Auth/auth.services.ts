@@ -1,7 +1,7 @@
 import AppError from "../../errors/AppError";
 
 import httpStatus from "http-status";
-import { TLoginUser } from "./auth.interface";
+import { TLoginAdmin, TLoginUser } from "./auth.interface";
 import { createToken, verifyToken } from "./auth.utils";
 
 import { JwtPayload } from "jsonwebtoken";
@@ -166,6 +166,50 @@ const loginUser = async (payload: TLoginUser) => {
   if (!(await UserModel.isPasswordMatched(payload?.password, user?.password))) {
     throw new AppError(httpStatus.BAD_REQUEST, "Password is incorrect!");
   }
+  await UserModel.findByIdAndUpdate(user._id, { 
+    fcmToken: payload.fcmToken 
+  });
+  // Ensure OTP is verified
+  if (!user.isOtpVerified) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "OTP verification is required before logging in!"
+    );
+  }
+if (user.status === 'blocked') {
+  throw new AppError(httpStatus.FORBIDDEN, 'Your account is blocked by admin!');
+}
+  const jwtPayload = {
+    userId: user._id!.toString(),
+    role: user?.role,
+  };
+
+  const accessToken = createToken(
+    jwtPayload,
+    config.jwt_access_secret as string,
+    config.jwt_access_expires_in as string
+  );
+  const refreshToken = createToken(
+    jwtPayload,
+    config.jwt_refresh_secret as string,
+    config.jwt_refresh_expires_in as string
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+  };
+};
+const loginAdmin = async (payload: TLoginAdmin) => {
+  const user = await UserModel.isUserExistsByEmail(payload.email);
+  // console.log('login user',user);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "This user is not found!");
+  }
+  if (!(await UserModel.isPasswordMatched(payload?.password, user?.password))) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Password is incorrect!");
+  }
+
   // Ensure OTP is verified
   if (!user.isOtpVerified) {
     throw new AppError(
@@ -422,4 +466,5 @@ export const AuthServices = {
   verifyOTPForRegistration,
   resetPassword,
   resendOTP,
+  loginAdmin
 };
