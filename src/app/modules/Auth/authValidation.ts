@@ -47,10 +47,16 @@ const dobSchema = z
   ])
   .transform((v) => (v instanceof Date ? v : new Date(v)))
   .refine((d) => !Number.isNaN(d.getTime()), { message: "Invalid date of birth" });
+
 const loginValidationSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, { message: "Password is required" }),
     fcmToken: z.string({ message: "fcmToken is required" }).trim(),
+});
+const AdminloginValidationSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, { message: "Password is required" }),
+
 });
 
 export const registerUserValidationSchema = z
@@ -145,6 +151,7 @@ const refreshTokenValidationSchema = z.object({
 
 export const AuthValidation = {
   loginValidationSchema,
+  AdminloginValidationSchema,
   registerUserValidationSchema,
   editProfileSchema,
   forgotPasswordSchema,

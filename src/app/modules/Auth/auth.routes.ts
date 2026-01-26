@@ -36,7 +36,7 @@ router.post('/login',
     AuthControllers.userLogin
 );
 router.post('/admin/login',
-    validateRequest(AuthValidation.loginValidationSchema),
+    validateRequest(AuthValidation.AdminloginValidationSchema),
     AuthControllers.AdminLogin
 );
 router.post('/changePassword',
