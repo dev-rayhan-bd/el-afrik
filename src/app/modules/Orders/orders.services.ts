@@ -601,16 +601,33 @@ for (const item of order.items) {
 
   // Uber Rider Dispatch Logic
 // Uber Rider Dispatch Logic
+// if (order.orderType === OrderType.DELIVERY && order.uberQuoteId) {
+//   try {
+//     const uberPayload = {
+//       customerName: order.customerName,
+//       customerPhone: order.customerPhone,
+//       fullAddress: `${order.shippingAddress?.line1}, ${order.shippingAddress?.city}`, 
+//       items: order.items
+//     };
+    
+//     const uberResponse = await UberService.createUberDeliveryOrder(uberPayload, order.uberQuoteId);
+    
+//     if (uberResponse) {
+//       order.uberDeliveryId = uberResponse.deliveryId;
+//       order.uberTrackingUrl = uberResponse.tracking_url;
+//       order.uberStatus = uberResponse.status;
+      
+//       await order.save(); 
+//     }
+//   } catch (uberError) {
+//     console.error("Uber Dispatch Error:", uberError);
+//   }
+// }
+
 if (order.orderType === OrderType.DELIVERY && order.uberQuoteId) {
   try {
-    const uberPayload = {
-      customerName: order.customerName,
-      customerPhone: order.customerPhone,
-      fullAddress: `${order.shippingAddress?.line1}, ${order.shippingAddress?.city}`, 
-      items: order.items
-    };
-    
-    const uberResponse = await UberService.createUberDeliveryOrder(uberPayload, order.uberQuoteId);
+
+    const uberResponse = await UberService.createUberDeliveryOrder(order, order.uberQuoteId);
     
     if (uberResponse) {
       order.uberDeliveryId = uberResponse.deliveryId;
@@ -618,13 +635,12 @@ if (order.orderType === OrderType.DELIVERY && order.uberQuoteId) {
       order.uberStatus = uberResponse.status;
       
       await order.save(); 
+      // console.log("✅ Uber Tracking URL saved successfully");
     }
   } catch (uberError) {
-    console.error("Uber Dispatch Error:", uberError);
+    // console.error("❌ Uber Dispatch Error:", uberError);
   }
 }
-
-
 
 
 

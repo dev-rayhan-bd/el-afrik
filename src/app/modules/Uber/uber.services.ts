@@ -70,9 +70,10 @@ export const createUberDeliveryOrder = async (order: any, quoteId: string) => {
 //     };
 //   }
  if (IS_MOCK_MODE) {
-
+ const line1 = order.shippingAddress?.line1 || "N/A";
+    const city = order.shippingAddress?.city || "N/A";
     const pickup = RESTAURANT_ADDRESS.replace(/ /g, '+');
-    const dropoff = `${order.shippingAddress?.line1}, ${order.shippingAddress?.city}`.replace(/ /g, '+');
+  const dropoff = `${line1}, ${city}`.replace(/ /g, '+');
 
     return {
       deliveryId: "del_mock_" + Date.now(),
