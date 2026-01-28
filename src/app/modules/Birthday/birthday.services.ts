@@ -117,7 +117,7 @@ const activateClaimStatus = async (userId: string) => {
 // };
 
 
-const claimFreeOrder = async (userId: string, productId: string, pickupTime: string, uberQuoteId?: string, uberFee?: number) => {
+const claimFreeOrder = async (userId: string, productId: string, pickupTime: string, uberQuoteId?: string, uberFee?: number,  shippingAddress?: any,) => {
   const user = await UserModel.findById(userId);
   if (!user?.canClaimBirthdayReward) {
     throw new AppError(httpStatus.BAD_REQUEST, "Please click the claim button in the popup first!");
@@ -159,6 +159,7 @@ const claimFreeOrder = async (userId: string, productId: string, pickupTime: str
     customerEmail: user.email,
     customerName: `${user.firstName} ${user.lastName}`,
     pickupTime,
+    shippingAddress,
     uberQuoteId,
     uberFee,
     notes: "Birthday Free Dessert Reward"
