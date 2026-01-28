@@ -28,11 +28,36 @@ const checkEligibility = async (userId: string) => {
 };
 
 
-const activateClaimStatus = async (userId: string) => {
-  const eligibility = await checkEligibility(userId);
-  if (!eligibility.isBirthday) throw new AppError(httpStatus.BAD_REQUEST, "Today is not your birthday!");
+// src/app/modules/Birthday/birthday.services.ts
 
-  return await UserModel.findByIdAndUpdate(userId, { canClaimBirthdayReward: true }, { new: true });
+const activateClaimStatus = async (userId: string) => {
+  const user = await UserModel.findById(userId);
+  if (!user) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+
+  const today = new Date();
+  const dob = new Date(user.dob);
+  const currentYear = today.getFullYear();
+
+  const isBirthday = today.getMonth() === dob.getMonth() && today.getDate() === dob.getDate();
+  if (!isBirthday) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Today is not your birthday!");
+  }
+
+  if (user.lastBirthdayRewardYear === currentYear) {
+    throw new AppError(httpStatus.BAD_REQUEST, "You have already claimed your birthday reward for this year!");
+  }
+
+  
+  if (user.canClaimBirthdayReward) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Birthday reward is already activated!");
+  }
+
+
+  return await UserModel.findByIdAndUpdate(
+    userId, 
+    { canClaimBirthdayReward: true }, 
+    { new: true }
+  );
 };
 
 // const claimFreeOrder = async (userId: string, productId: string, pickupTime: string) => {
