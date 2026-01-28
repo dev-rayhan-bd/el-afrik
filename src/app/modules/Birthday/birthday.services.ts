@@ -127,7 +127,10 @@ const claimFreeOrder = async (userId: string, productId: string, pickupTime: str
   if (!product) throw new AppError(httpStatus.NOT_FOUND, "Product not found");
 
   const category = product.category as any;
-  if (category?.categoryName?.toLowerCase() !== 'desert') {
+  const categoryName=category?.categoryName
+   const isDessertMatch = /^(dessert|desert)s?$/i.test(categoryName);
+
+  if (!isDessertMatch) {
     throw new AppError(httpStatus.BAD_REQUEST, "Birthday gift is only available for Desserts!");
   }
 
