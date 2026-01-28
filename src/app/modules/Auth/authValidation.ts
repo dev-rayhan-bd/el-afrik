@@ -146,7 +146,7 @@ const resetPasswordValidationSchema = z.object({
  * Refresh token
  */
 const refreshTokenValidationSchema = z.object({
-  refreshToken: z.string().min(1, { message: "Token is required!" }),
+  refreshToken: z.string().min(1, { message: "Refresh Token is required!" }),
 });
 
 export const AuthValidation = {

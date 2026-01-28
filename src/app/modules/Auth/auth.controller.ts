@@ -164,7 +164,7 @@ const verifyYourOTP = catchAsync(async (req:Request, res:Response) => {
   const refreshToken = catchAsync(async (req, res) => {
     // const { refreshToken } = req.cookies;
     const { refreshToken } = req.body;
-    console.log('refreshToken',refreshToken);
+    // console.log('refreshToken',refreshToken);
   
     const result = await AuthServices.refreshToken(refreshToken);
     console.log('refreshToken',result);
