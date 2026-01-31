@@ -4,6 +4,7 @@ import { QRCodeModel } from './qrcode.model';
 import { RewardServices } from '../Reward/reward.services';
 import { PointSource } from '../Reward/reward.interface';
 import { sendNotification } from '../../utils/sendNotification';
+import QueryBuilder from '../../builder/QueryBuilder';
 
 
 const createQRCode = async (payload: { title: string; points: number; daysValid: number }) => {
@@ -57,8 +58,15 @@ const claimQRCodePoints = async (userId: string, code: string) => {
   return { pointsEarned: qrRecord.points };
 };
 
-const getAllQRCodes = async () => {
-  return await QRCodeModel.find().sort({ createdAt: -1 });
+const getAllQRCodes = async (query: Record<string, unknown>) => {
+   const queryBuilder = new QueryBuilder(QRCodeModel.find(), query);
+  
+  
+    queryBuilder.filter().paginate();
+      const result = await queryBuilder.modelQuery;
+  const meta = await queryBuilder.countTotal();
+    return { meta, result};
+  // return await QRCodeModel.find().sort({ createdAt: -1 });
 };
 
 export const QRCodeServices = { createQRCode, claimQRCodePoints, getAllQRCodes };

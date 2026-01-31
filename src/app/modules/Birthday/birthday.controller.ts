@@ -15,8 +15,8 @@ const activateClaim = catchAsync(async (req: Request, res: Response) => {
 });
 
 const placeClaimOrder = catchAsync(async (req: Request, res: Response) => {
-  const { productId, pickupTime } = req.body;
-  const result = await BirthdayService.claimFreeOrder(req.user.userId, productId, pickupTime);
+  const { productId, pickupTime,uberQuoteId, uberFee,  shippingAddress } = req.body;
+  const result = await BirthdayService.claimFreeOrder(req.user.userId, productId, pickupTime,uberQuoteId, uberFee,shippingAddress);
   sendResponse(res, { statusCode: httpStatus.CREATED, success: true, message: 'Order placed successfully', data: result });
 });
 

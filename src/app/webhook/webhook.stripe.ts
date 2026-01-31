@@ -11,6 +11,7 @@ import { PaymentStatus } from '../modules/Orders/orders.interface';
 import { OrderModel } from '../modules/Orders/orders.model';
 import { PointRedemptionService } from '../modules/PointRedemtion/pointredemtion.services';
 import { sendNotification } from '../utils/sendNotification';
+import { BirthdayService } from '../modules/Birthday/birthday.services';
 
 const stripe = new Stripe(config.stripe_secret_key as string);
 const webhookSecret = config.stripe_webhook_secret_key as string;
@@ -72,7 +73,9 @@ case 'checkout.session.completed': {
           else if (type === 'point_redemption_delivery') {
    await handleRedemptionPayment(session); 
           } 
-         
+         else if (type === 'birthday_reward') {
+      await BirthdayService.handleBirthdaySuccess(session.metadata!.orderId);
+    } 
           else {
             await OrderService.handlePaymentSuccess(session);
           }

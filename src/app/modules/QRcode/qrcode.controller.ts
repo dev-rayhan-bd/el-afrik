@@ -16,7 +16,7 @@ const claimQR = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getCodes = catchAsync(async (req: Request, res: Response) => {
-  const result = await QRCodeServices.getAllQRCodes();
+  const result = await QRCodeServices.getAllQRCodes(req.query);
   sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'QR Codes fetched', data: result });
 });
 
