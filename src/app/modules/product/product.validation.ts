@@ -44,7 +44,7 @@ export const createProductSchema = z.object({
 
       status: ProductStatusZod.optional(),
 
-      deliveryFee: nonNegativeNumber("Delivery fee").optional().default(0),
+ 
 
       points: nonNegativeNumber("Points").optional().default(0),
 calories: nonNegativeNumber("Calories").optional(),
@@ -78,7 +78,7 @@ export const updateProductSchema = z.object({
       price: z.coerce.number().min(0).optional(),
       quantity: z.coerce.number().min(0).optional(),
       status: ProductStatusZod.optional(),
-      deliveryFee: z.coerce.number().min(0).optional(),
+   
       points: z.coerce.number().min(0).optional(),
       description: z.string().trim().min(1).max(2000).optional(),
       promo: z.string().trim().min(1).optional(),

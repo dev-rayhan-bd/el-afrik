@@ -84,12 +84,7 @@ const ProductSchema: Schema<IProductDocument> = new Schema(
       enum: Object.values(ProductStatus),
       default: ProductStatus.INSTOCK
     },
-    deliveryFee: {
-      type: Number,
-      required: [true, 'Delivery fee is required'],
-      min: [0, 'Delivery fee cannot be negative'],
-      default: 0
-    },
+  
     points: {
       type: Number,
       default: 0,

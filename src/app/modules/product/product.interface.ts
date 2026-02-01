@@ -23,7 +23,6 @@ export interface IProduct {
     discountedPrice?: number;
   quantity: number;
   status: ProductStatus;
-  deliveryFee: number;
   review:TReview[];
   points: number;
   description: string;
