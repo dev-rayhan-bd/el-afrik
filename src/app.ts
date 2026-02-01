@@ -35,6 +35,7 @@ app.use(
       'http://localhost:5174',
       'http://localhost:3000',
       'https://el-afrik.vercel.app',
+      'http://15.223.245.199'
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
