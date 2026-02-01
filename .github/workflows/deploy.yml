@@ -3,7 +3,7 @@ name: Deploy to AWS EC2
 on:
   push:
     branches:
-      - main  
+      - main
 
 jobs:
   deploy:
@@ -20,17 +20,25 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # NVM এবং Node লোড করা (npm/pm2 পাওয়ার জন্য)
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            
+            mkdir -p ~/app
             cd ~/app
-            # if git not setup then it clone it otherwise pull
+            
+            # গিট সেটআপ (যদি ফোল্ডার খালি না থাকে তবুও কাজ করবে)
             if [ ! -d ".git" ]; then
-              git clone https://github.com/Rayhan108/el-afrik.git .
-            else
-              git pull origin main
+              git init
+              git remote add origin https://github.com/sparktechagency/elafrik_backend.git
             fi
+            
+            git fetch --all
+            git reset --hard origin/main
             
             npm install
             npm run build
-            # app restart using PM2 
+            
             pm2 delete el-afrik || true
             pm2 start dist/server.js --name "el-afrik"
             pm2 save
