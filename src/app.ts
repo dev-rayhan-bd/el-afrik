@@ -12,18 +12,7 @@ import { stripeWebhookHandler } from './app/webhook/webhook.stripe';
 const app: Application = express();
 
 
-// Stripe needs raw body for signature verification
-app.post(
-  '/webhook/stripe',
-  express.raw({ type: 'application/json' }),
-  stripeWebhookHandler
-);
 
-// Now apply JSON parser for all other routes
-app.use(express.json());
-app.use(cookieParser());
-
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use(
   cors({
@@ -42,6 +31,20 @@ app.use(
     credentials: true,
   })
 );
+
+// Stripe needs raw body for signature verification
+app.post(
+  '/webhook/stripe',
+  express.raw({ type: 'application/json' }),
+  stripeWebhookHandler
+);
+
+// Now apply JSON parser for all other routes
+app.use(express.json());
+app.use(cookieParser());
+
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 
 app.use(morgan('dev'));
 app.use('/api/v1', router);
