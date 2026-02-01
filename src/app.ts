@@ -12,6 +12,25 @@ import { stripeWebhookHandler } from './app/webhook/webhook.stripe';
 const app: Application = express();
 
 
+
+
+app.use(
+  cors({
+    origin: [
+      'http://10.10.20.13:5000',
+      'http://10.10.20.13:3000',
+      'http://localhost:5175',
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:3000',
+      'https://el-afrik.vercel.app',
+      'http://15.223.245.199',
+      'http://15.223.245.199:3000',
+    ],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    credentials: true,
+  })
+);
 // app.use(
 //   cors({
 //     origin: (origin, callback) => {
@@ -40,11 +59,6 @@ const app: Application = express();
 //   })
 // );
 
-app.use(cors({
-  origin: true, 
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
-}))
 // Stripe needs raw body for signature verification
 app.post(
   '/webhook/stripe',
