@@ -31,6 +31,12 @@ const ProductSchema: Schema<IProductDocument> = new Schema(
       trim: true,
       maxlength: [100, 'Name cannot exceed 100 characters']
     },
+    deliveryFee: {
+      type: Number,
+      required: [true, 'Delivery fee is required'],
+      min: [0, 'Delivery fee cannot be negative'],
+      default: 0
+    },
     images: {
       type: [String],
       required: [true, 'At least one image is required'],
@@ -54,7 +60,8 @@ const ProductSchema: Schema<IProductDocument> = new Schema(
       required: [true, 'Price is required'],
       min: [0, 'Price cannot be negative']
     },
-
+ 
+ 
     // Discount field added to the schema
     discount: {
 
@@ -67,10 +74,11 @@ const ProductSchema: Schema<IProductDocument> = new Schema(
           type: Number,
 
           min: [0, 'Discount amount cannot be negative']
-        }
+        },
 
 
     },
+ 
         discountedPrice:{   type: Number,
       min: [0, 'Discounted Price cannot be negative']},
       quantity: {

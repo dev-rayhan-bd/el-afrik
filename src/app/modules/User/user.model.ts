@@ -41,6 +41,7 @@ const userSchema = new Schema<TUser, User, IUserMethods>(
   enum: ["user", "admin", "superAdmin"], 
   default: "user" 
 },
+
     fcmToken: { type: String, required: true },
     point: { type: Number, default:0},
     loyalityTier: { type: String,   enum: ["Silver", "Gold", "Platinum"], default: "Silver"},

@@ -19,6 +19,7 @@ export interface IProduct {
   weight: number;
   category: Types.ObjectId;
   price: number;
+deliveryFee: number;
   discount?:TDiscount;
     discountedPrice?: number;
   quantity: number;
