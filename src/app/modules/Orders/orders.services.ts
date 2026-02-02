@@ -176,7 +176,7 @@ const contact = user.contact;
     });
   }
 
-  const baseUrl = (config.frontend_url || "").replace(/\/+$/, "");
+  const baseUrl = (config.server_url || "").replace(/\/+$/, "");
 
   const sessionConfig: Stripe.Checkout.SessionCreateParams = {
     payment_method_types: ["card"],
@@ -193,8 +193,8 @@ const contact = user.contact;
       totalPoints: totalPoints.toString(),
     },
     client_reference_id: order._id.toString(),
-    success_url: `${baseUrl}/order/success?session_id={CHECKOUT_SESSION_ID}&order=${order.orderNumber}`,
-    cancel_url: `${baseUrl}/order/cancel?order=${order.orderNumber}`,
+    success_url: `${baseUrl}/payment-cancel?session_id={CHECKOUT_SESSION_ID}&order=${order.orderNumber}`,
+    cancel_url: `${baseUrl}/payment-cancel?order=${order.orderNumber}`,
   };
 
   // if (orderType === OrderType.DELIVERY) {
@@ -334,7 +334,7 @@ let deliveryFee = 0;
     });
   }
 
-  const baseUrl = (config.frontend_url || "").replace(/\/+$/, "");
+  const baseUrl = (config.server_url || "").replace(/\/+$/, "");
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     line_items: lineItems,
@@ -484,7 +484,7 @@ const contact = user.contact;
     });
   }
 
-  const baseUrl = (config.frontend_url || "").replace(/\/+$/, "");
+  const baseUrl = (config.server_url || "").replace(/\/+$/, "");
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     line_items: lineItems,
@@ -495,8 +495,8 @@ const contact = user.contact;
       userId: userId,
       promoCode: promo.specialPromoCode
     },
-    success_url: `${baseUrl}/order/success?session_id={CHECKOUT_SESSION_ID}&order=${order.orderNumber}`,
-    cancel_url: `${baseUrl}/order/cancel?order=${order.orderNumber}`,
+    success_url: `${baseUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}&order=${order.orderNumber}`,
+    cancel_url: `${baseUrl}/payment-cancel?order=${order.orderNumber}`,
   });
 
   order.stripeSessionId = session.id;

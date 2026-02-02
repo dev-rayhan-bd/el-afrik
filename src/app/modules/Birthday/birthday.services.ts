@@ -183,8 +183,8 @@ const claimFreeOrder = async (userId: string, productId: string, pickupTime: str
         orderId: order._id.toString(), 
         type: 'birthday_reward' 
       },
-      success_url: `${config.frontend_url}/order/success?session_id={CHECKOUT_SESSION_ID}&order=${order.orderNumber}`,
-      cancel_url: `${config.frontend_url}/order/cancel`,
+      success_url: `${config.server_url}/payment-success?session_id={CHECKOUT_SESSION_ID}&order=${order.orderNumber}`,
+      cancel_url: `${config.server_url}/payment-cancel`,
     });
 
     order.stripeSessionId = session.id;

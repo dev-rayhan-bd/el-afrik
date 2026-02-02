@@ -369,8 +369,8 @@ const purchaseWithPoints = async (input: IPointRedemptionInput) => {
         orderId: order._id.toString(), 
         type: 'point_redemption_delivery' 
       },
-      success_url: `${config.frontend_url}/order/success?session_id={CHECKOUT_SESSION_ID}&order=${order.orderNumber}`,
-      cancel_url: `${config.frontend_url}/order/cancel`,
+      success_url: `${config.server_url}/payment-success?session_id={CHECKOUT_SESSION_ID}&order=${order.orderNumber}`,
+      cancel_url: `${config.server_url}/payment-cancel`,
     });
 
     order.stripeSessionId = session.id;

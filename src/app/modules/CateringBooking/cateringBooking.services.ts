@@ -83,8 +83,8 @@ const fullName = user.fullName || `${user.firstName} ${user.lastName}`;
     }],
     // metadata: { bookingId: booking._id.toString(),   customerName: fullName ,type: 'catering' },
       metadata: { bookingId: booking._id.toString(), type: 'catering', uberQuoteId: uberQuoteId },
-    success_url: `${config.frontend_url}/catering/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${config.frontend_url}/catering/cancel`,
+    success_url: `${config.server_url}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${config.server_url}/payment-cancel`,
   });
 
   booking.stripeSessionId = session.id;
