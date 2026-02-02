@@ -344,8 +344,8 @@ let deliveryFee = 0;
       orderId: order._id.toString(),
       userId: userId,
     },
-    success_url: `${baseUrl}/order/success?session_id={CHECKOUT_SESSION_ID}&order=${order.orderNumber}`,
-    cancel_url: `${baseUrl}/order/cancel?order=${order.orderNumber}`,
+    success_url: `${baseUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}&order=${order.orderNumber}`,
+    cancel_url: `${baseUrl}/payment-cancel?order=${order.orderNumber}`,
   });
 
   order.stripeSessionId = session.id;
