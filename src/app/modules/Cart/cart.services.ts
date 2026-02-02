@@ -10,7 +10,11 @@ const getAllItemsFromCart = async (userId: string) => {
   const cart = await CartModel.findOne({ user: userId }).populate('items.product');
 
   if (!cart) {
-    throw new AppError(httpStatus.NOT_FOUND, 'Cart item not found!');
+    return {
+      user: userId,
+      items: [], 
+      subtotal: 0
+    };
   }
 
   return cart;
