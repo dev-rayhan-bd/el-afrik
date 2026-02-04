@@ -193,7 +193,7 @@ const contact = user.contact;
       totalPoints: totalPoints.toString(),
     },
     client_reference_id: order._id.toString(),
-    success_url: `${baseUrl}/payment-cancel?session_id={CHECKOUT_SESSION_ID}&order=${order.orderNumber}`,
+    success_url: `${baseUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}&order=${order.orderNumber}`,
     cancel_url: `${baseUrl}/payment-cancel?order=${order.orderNumber}`,
   };
 
