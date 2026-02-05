@@ -141,10 +141,53 @@ const getRewardSummary = async (userId: string) => {
   };
 };
 
-const getPointHistory = async (userId: string, query: any) => {
-  await checkAndExpirePoints(userId);
+// const getPointHistory = async (userId: string, query: any) => {
+//   await checkAndExpirePoints(userId);
   
  
+//   const reward = await RewardModel.findOne({ user: userId })
+//     .populate('history.orderId');
+
+//   if (!reward) {
+//     return {
+//       history: [],
+//       pagination: { page: 1, limit: 10, total: 0 },
+//       summary: { currentBalance: 0, totalEarned: 0, totalUsed: 0, totalExpired: 0 }
+//     };
+//   }
+
+//   // history sorted by desc
+//   const history = [...reward.history].sort(
+//     (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+//   );
+  
+//   const page = Number(query.page) || 1;
+//   const limit = Number(query.limit) || 10;
+//   const skip = (page - 1) * limit;
+
+//   return {
+//     history: history.slice(skip, skip + limit),
+
+//     summary: {
+//       currentBalance: reward.currentBalance,
+//       totalEarned: reward.totalEarned,
+//       totalUsed: reward.totalUsed,
+//       totalExpired: reward.totalExpired
+//     },
+//         pagination: { 
+//       page, 
+//       limit, 
+//       total: history.length,
+//       totalPages: Math.ceil(history.length / limit)
+//     },
+//   };
+// };
+
+
+const getPointHistory = async (userId: string, query: any) => {
+
+  await checkAndExpirePoints(userId);
+
   const reward = await RewardModel.findOne({ user: userId })
     .populate('history.orderId');
 
@@ -156,17 +199,30 @@ const getPointHistory = async (userId: string, query: any) => {
     };
   }
 
-  // history sorted by desc
-  const history = [...reward.history].sort(
+
+  let filteredHistory = [...reward.history];
+
+
+  if (query.type) {
+    filteredHistory = filteredHistory.filter(
+      (item) => item.type.toLowerCase() === query.type.toLowerCase()
+    );
+  }
+
+
+  filteredHistory.sort(
     (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
   );
-  
+
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
 
+
+  const paginatedHistory = filteredHistory.slice(skip, skip + limit);
+
   return {
-    history: history.slice(skip, skip + limit),
+    history: paginatedHistory,
 
     summary: {
       currentBalance: reward.currentBalance,
@@ -174,14 +230,16 @@ const getPointHistory = async (userId: string, query: any) => {
       totalUsed: reward.totalUsed,
       totalExpired: reward.totalExpired
     },
-        pagination: { 
+    pagination: { 
       page, 
       limit, 
-      total: history.length,
-      totalPages: Math.ceil(history.length / limit)
+      total: filteredHistory.length, 
+      totalPages: Math.ceil(filteredHistory.length / limit)
     },
   };
 };
+
+
 // ═══════════════════════════════════════════════════════════════════════
 // REFUND POINTS
 // ═══════════════════════════════════════════════════════════════════════
