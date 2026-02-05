@@ -126,28 +126,62 @@ const updateProductFromDB = async (id: string, payload: IProduct) => {
 
 
 
+// const addReviewIntoDB = async (userId: string, productId: string, rating: number, comment?: string) => {
+//   const product = await ProductModel.findById(productId);
+//   if (!product) throw new AppError(httpStatus.NOT_FOUND, 'Product not found');
+
+//   //check user already given review or not if given then update previous review if not then add new review
+//   const existingReviewIndex = product.review.findIndex(
+//     (rev: any) => rev.user.toString() === userId
+//   );
+
+//   if (existingReviewIndex > -1) {
+
+//     product.review[existingReviewIndex].rating = rating;
+//     if (comment) product.review[existingReviewIndex].comment = comment;
+//   } else {
+
+//     product.review.push({ user: new mongoose.Types.ObjectId(userId), rating, comment } as any);
+//   }
+
+//   await product.save();
+//   return product;
+// };
+
+
 const addReviewIntoDB = async (userId: string, productId: string, rating: number, comment?: string) => {
   const product = await ProductModel.findById(productId);
   if (!product) throw new AppError(httpStatus.NOT_FOUND, 'Product not found');
 
-  //check user already given review or not if given then update previous review if not then add new review
   const existingReviewIndex = product.review.findIndex(
     (rev: any) => rev.user.toString() === userId
   );
 
   if (existingReviewIndex > -1) {
-
-    product.review[existingReviewIndex].rating = rating;
-    if (comment) product.review[existingReviewIndex].comment = comment;
+  
+    return await ProductModel.findOneAndUpdate(
+      { _id: productId, "review.user": userId },
+      { 
+        $set: { 
+          "review.$.rating": rating, 
+          "review.$.comment": comment 
+        } 
+      },
+      { new: true, runValidators: false } // runValidators false
+    );
   } else {
-
-    product.review.push({ user: new mongoose.Types.ObjectId(userId), rating, comment } as any);
+ 
+    return await ProductModel.findByIdAndUpdate(
+      productId,
+      { 
+        $push: { 
+          review: { user: new mongoose.Types.ObjectId(userId), rating, comment } 
+        } 
+      },
+      { new: true, runValidators: false }
+    );
   }
-
-  await product.save();
-  return product;
 };
-
 const getSingleProductFromDB = async (id: string, userId?: string) => {
   const product = await ProductModel.findById(id);
   if (!product) {

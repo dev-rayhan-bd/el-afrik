@@ -34,9 +34,11 @@ jobs:
             fi
             
             git fetch --all
+
             git reset --hard origin/main
             
             npm install
+            rm -rf dist
             npm run build
             
             pm2 delete el-afrik || true
