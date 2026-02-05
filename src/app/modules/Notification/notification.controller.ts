@@ -5,21 +5,7 @@ import httpStatus from 'http-status';
 import { NotificationModel } from './notification.model';
 import AppError from '../../errors/AppError';
 
-// const getMyNotifications = catchAsync(async (req: Request, res: Response) => {
-//   const userId = req.user.userId;
 
-
-//   const result = await NotificationModel.find({ user: userId })
-//     .sort({ createdAt: -1 });
-
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: 'Notifications retrieved successfully',
-//     data: result,
-//   });
-// });
-// src/app/modules/Notification/notification.controller.ts
 
 const getMyNotifications = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user.userId;
