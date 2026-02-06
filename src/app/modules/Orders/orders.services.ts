@@ -830,7 +830,7 @@ const getMyOrders = async (userId: string, query: Record<string, unknown>) => {
   return { result, meta };
 };
 // ═══════════════════════════════════════════════════════════════════════
-// GET ORDER BY ID
+// GET ORDER BY ID c
 // ═══════════════════════════════════════════════════════════════════════
 const getOrderById = async (orderId: string, userId?: string) => {
   const query: any = { _id: orderId };
