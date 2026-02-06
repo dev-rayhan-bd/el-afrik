@@ -374,14 +374,17 @@ const createSpecialPromoCheckoutSession = async (input: {
   notes?: string;
    uberQuoteId?: string;
   uberFee?: number;
+  specialPromoCode:string
 }) => {
-  const { userId, specialPromoId, quantity, orderType, customerEmail, shippingAddress, pickupTime, notes,uberQuoteId, uberFee } = input;
+  const { userId, specialPromoId, quantity, orderType, customerEmail, shippingAddress, pickupTime, notes,uberQuoteId, uberFee,specialPromoCode } = input;
 
   const promo = await SpecialPromoModel.findById(specialPromoId).populate('product');
   if (!promo) {
     throw new AppError(httpStatus.NOT_FOUND, "Special Promo offer not found!");
   }
-
+if (promo.specialPromoCode !== specialPromoCode) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Invalid promo code! Please check and try again.");
+  }
   if (new Date(promo.validity) < new Date()) {
     throw new AppError(httpStatus.BAD_REQUEST, "This promo offer has expired!");
   }

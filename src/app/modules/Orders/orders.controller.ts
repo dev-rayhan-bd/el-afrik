@@ -103,7 +103,7 @@ const createSingleProductCheckout = catchAsync(async (req: Request, res: Respons
 const createPromoCheckout = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.userId;
   const { specialPromoId, quantity, orderType, shippingAddress, pickupTime, notes,uberQuoteId, 
-    uberFee } = req.body;
+    uberFee ,specialPromoCode} = req.body;
 
   if (!specialPromoId) {
     throw new AppError(httpStatus.BAD_REQUEST, "Special Promo ID is required");
@@ -124,7 +124,8 @@ const createPromoCheckout = catchAsync(async (req: Request, res: Response) => {
     pickupTime,
     notes,
     uberQuoteId, 
-    uberFee
+    uberFee,
+    specialPromoCode
   });
 
   sendResponse(res, {
