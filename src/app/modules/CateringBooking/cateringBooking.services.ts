@@ -166,7 +166,19 @@ const getAllBookings = async (query: Record<string, unknown>) => {
   const meta = await bookingQuery.countTotal();
   return { meta, result };
 };
+const getMyBookingsFromDB = async (userId: string, query: Record<string, unknown>) => {
+  const bookingQuery = new QueryBuilder(
+    CateringBookingModel.find({ user: userId }).populate('package'), 
+    query
+  )
+    .filter()
+    .sort()
+    .paginate();
 
+  const result = await bookingQuery.modelQuery;
+  const meta = await bookingQuery.countTotal();
+  return { meta, result };
+};
 const generateInvoicePDF = async (bookingId: string) => {
   const booking = await CateringBookingModel.findById(bookingId).populate('user package');
   
@@ -237,5 +249,6 @@ export const CateringService = {
   createCheckoutSession,
   handlePaymentSuccess,
   getAllBookings,
-  generateInvoicePDF
+  generateInvoicePDF,
+  getMyBookingsFromDB
 };

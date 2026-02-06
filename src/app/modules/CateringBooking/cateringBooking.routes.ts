@@ -27,5 +27,5 @@ router.get(
 // User Routes
 router.get('/packages', CateringController.getPackages);
 router.post('/reserve', auth(USER_ROLE.user), CateringController.createReservation);
-
+router.get('/my-bookings', auth(USER_ROLE.user), CateringController.getMyBookings);
 export const CateringRoutes = router;

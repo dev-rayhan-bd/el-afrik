@@ -48,6 +48,20 @@ const getAllBookings = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Bookings retrieved', data: result });
 });
 
+const getMyBookings = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user.userId;
+  const result = await CateringService.getMyBookingsFromDB(userId, req.query);
+  
+  sendResponse(res, { 
+    statusCode: httpStatus.OK, 
+    success: true, 
+    message: 'My bookings retrieved successfully', 
+    data: result 
+  });
+});
+
+
+
 const downloadInvoice = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const pdfDoc = await CateringService.generateInvoicePDF(id);
@@ -67,5 +81,5 @@ export const CateringController = {
   getPackages, 
   createReservation, 
   getAllBookings ,
-  downloadInvoice
+  downloadInvoice,getMyBookings
 };

@@ -19,11 +19,13 @@ export enum PaymentStatus {
   PAID = 'paid',
   FAILED = 'failed',
   POINTS_PAID = 'points_paid',
+    BIRTHDAY='birthday'
 }
 
 export enum PaymentMethod {
   CARD = 'card',
   POINTS = 'points',
+
 }
 
 export interface IOrderItem {
