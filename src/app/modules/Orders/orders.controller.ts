@@ -138,25 +138,39 @@ const createPromoCheckout = catchAsync(async (req: Request, res: Response) => {
 
   // Get My Orders
 
-const getMyOrders = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.user?.userId;
+// const getMyOrders = catchAsync(async (req: Request, res: Response) => {
+//   const userId = req.user?.userId;
   
  
-  const { orderStatus, orderType, paymentStatus, search, page = 1, limit = 10 } = req.query;
+//   const { orderStatus, orderType, paymentStatus, search, page = 1, limit = 10 } = req.query;
 
-  const result = await OrderService.getMyOrders(
-    userId.toString(),
-    {
-      orderStatus: orderStatus as OrderStatus,
-      orderType: orderType as OrderType,
-      paymentStatus: paymentStatus as any, 
-      search: search as string,          
-    },
-    {
-      page: Number(page),
-      limit: Number(limit),
-    }
-  );
+//   const result = await OrderService.getMyOrders(
+//     userId.toString(),
+//     {
+//       orderStatus: orderStatus as OrderStatus,
+//       orderType: orderType as OrderType,
+//       paymentStatus: paymentStatus as any, 
+//       search: search as string,          
+//     },
+//     {
+//       page: Number(page),
+//       limit: Number(limit),
+//     }
+//   );
+
+//   sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     success: true,
+//     message: 'Orders retrieved successfully',
+//     data: result,
+//   });
+// });
+// src/app/modules/Orders/orders.controller.ts
+
+const getMyOrders = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user.userId;
+
+ const result = await OrderService.getMyOrders(userId.toString(), req.query);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -165,7 +179,6 @@ const getMyOrders = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
-
 /**
  * Get Order by ID
  * GET /orders/:id

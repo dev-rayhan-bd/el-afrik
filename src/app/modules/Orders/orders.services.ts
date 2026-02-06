@@ -28,6 +28,7 @@ import { PointSource } from "../Reward/reward.interface";
 import { sendNotification, sendNotificationToAdmins } from "../../utils/sendNotification";
 import { SpecialPromoModel } from "../SpecialPromo/specialpromo.model";
 import { UberService } from "../Uber/uber.services";
+import QueryBuilder from "../../builder/QueryBuilder";
 
 const stripe = new Stripe(config.stripe_secret_key as string);
 
@@ -735,59 +736,99 @@ const handlePaymentFailure = async (orderId: string) => {
 // ═══════════════════════════════════════════════════════════════════════
 // GET USER'S ORDERS
 // ═══════════════════════════════════════════════════════════════════════
-const getMyOrders = async (
-  userId: string,
-  filters: IOrderFilters,
-  pagination: IPaginationOptions,
-) => {
-  const {
-    page = 1,
-    limit = 10,
-    sortBy = "createdAt",
-    sortOrder = "desc",
-  } = pagination;
+// const getMyOrders = async (
+//   userId: string,
+//   filters: IOrderFilters,
+//   pagination: IPaginationOptions,
+// ) => {
+//   const {
+//     page = 1,
+//     limit = 10,
+//     sortBy = "createdAt",
+//     sortOrder = "desc",
+//   } = pagination;
 
   
-  const { orderStatus, orderType, paymentStatus, search } = filters;
+//   const { orderStatus, orderType, paymentStatus, search } = filters;
 
-  const query: any = { user: userId };
-
-
-  if (orderStatus) query.orderStatus = orderStatus;
-  if (orderType) query.orderType = orderType;
-  if (paymentStatus) query.paymentStatus = paymentStatus; 
+//   const query: any = { user: userId };
 
 
-  if (search) {
-    query.$or = [
-      { orderNumber: { $regex: search, $options: "i" } },
-    ];
+//   if (orderStatus) query.orderStatus = orderStatus;
+//   if (orderType) query.orderType = orderType;
+//   if (paymentStatus) query.paymentStatus = paymentStatus; 
+
+
+//   if (search) {
+//     query.$or = [
+//       { orderNumber: { $regex: search, $options: "i" } },
+//     ];
+//   }
+
+//   const skip = (page - 1) * limit;
+//   const sortOptions: any = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
+
+//   const [orders, total] = await Promise.all([
+//     OrderModel.find(query)
+//       .sort(sortOptions)
+//       .skip(skip)
+//       .limit(limit)
+//       .populate("user", "firstName lastName email point image")
+//       .populate("items.product", "name images points"),
+//     OrderModel.countDocuments(query),
+//   ]);
+
+//   return {
+//     orders,
+//     pagination: {
+//       page,
+//       limit,
+//       total,
+//       totalPages: Math.ceil(total / limit),
+//     },
+//   };
+// };
+// src/app/modules/Orders/orders.services.ts
+
+// src/app/modules/Orders/orders.services.ts
+
+// src/app/modules/Orders/orders.services.ts
+
+// src/app/modules/Orders/orders.services.ts
+
+const getMyOrders = async (userId: string, query: Record<string, unknown>) => {
+  
+  if (query.status) {
+    query.orderStatus = query.status;
+    delete query.status;
   }
 
-  const skip = (page - 1) * limit;
-  const sortOptions: any = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
 
-  const [orders, total] = await Promise.all([
-    OrderModel.find(query)
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(limit)
-      .populate("user", "firstName lastName email point image")
-      .populate("items.product", "name images points"),
-    OrderModel.countDocuments(query),
-  ]);
+  const successfulStatuses = ['paid', 'points_paid', 'birthday'];
 
-  return {
-    orders,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
+  if (query.paymentStatus) {
+
+  } else {
+
+    query.paymentStatus = { $in: successfulStatuses };
+  }
+
+  const orderQuery = new QueryBuilder(
+    OrderModel.find({ user: userId })
+      .populate('user', 'firstName lastName email image')
+      .populate('items.product', 'name images points'), 
+    query
+  )
+    .search(['orderNumber', 'customerName', 'customerEmail', 'notes']) 
+    .filter()
+    .sort() 
+    .paginate();
+
+  const result = await orderQuery.modelQuery;
+  const meta = await orderQuery.countTotal();
+
+  return { result, meta };
 };
-
 // ═══════════════════════════════════════════════════════════════════════
 // GET ORDER BY ID
 // ═══════════════════════════════════════════════════════════════════════
