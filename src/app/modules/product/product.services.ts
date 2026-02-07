@@ -22,7 +22,7 @@ const getAllProductFromDB = async (query: Record<string, unknown>, userId?: stri
   const queryBuilder = new QueryBuilder(ProductModel.find().populate('category'), query);
 
 
-  queryBuilder.search(["name", "description"]) .filter().paginate();
+  queryBuilder.search(["name"]) .filter().paginate();
   
   const result = await queryBuilder.modelQuery;
   const meta = await queryBuilder.countTotal();
