@@ -29,7 +29,13 @@ const getSingleActivitiesFromDB = async (id: string) => {
 
 const addActivitiesIntoDB = async (payload: ICategories) => {
 
+  const isExist = await CategoryModel.findOne({
+    categoryName: { $regex: new RegExp(`^${payload.categoryName}$`, 'i') }
+  });
 
+  if (isExist) {
+    throw new AppError(httpStatus.CONFLICT, "This category already exists!");
+  }
 
   const result = (await CategoryModel.create(payload));
   return result;

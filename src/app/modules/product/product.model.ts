@@ -29,6 +29,7 @@ const ProductSchema: Schema<IProductDocument> = new Schema(
       type: String,
       required: [true, 'Product name is required'],
       trim: true,
+      unique: true, 
       maxlength: [100, 'Name cannot exceed 100 characters']
     },
     deliveryFee: {

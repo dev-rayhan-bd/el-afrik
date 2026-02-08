@@ -63,8 +63,14 @@ const getAllProductFromDB = async (query: Record<string, unknown>, userId?: stri
 //   return { ...productObj, isFavourite };
 // };
 const addProductIntoDB = async (payload: IProduct) => {
-  console.log("product data->", payload.category);
+  // console.log("product data->", payload.category);
+  const isProductExist = await ProductModel.findOne({
+    name: { $regex: new RegExp(`^${payload.name}$`, 'i') }
+  });
 
+  if (isProductExist) {
+    throw new AppError(httpStatus.CONFLICT, "A product with this name already exists!");
+  }
   const categoryId = payload.category;
   const category = await CategoryModel.findById(categoryId);
   if (!category) {
