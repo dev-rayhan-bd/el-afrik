@@ -10,7 +10,7 @@ import sendResponse from '../../utils/sendResponse';
 import catchAsync from '../../utils/catchAsync';
 
 
-// Controller to create or update Privacy Policy content
+// Controller to create or update Privacy Policy content..
 const createOrUpdateTerms = catchAsync(async (req: Request, res: Response) => {
   const { aboutUs } = req.body;
 
