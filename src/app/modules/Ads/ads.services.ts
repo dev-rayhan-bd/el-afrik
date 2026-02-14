@@ -20,7 +20,7 @@ const getAllAdsFromDB = async (query: Record<string, unknown>) => {
 const deleteAdsFromDB = async (id: string) => {
   const result = await AdsModel.findByIdAndDelete(id);
   if (!result) {
-    throw new AppError(httpStatus.NOT_FOUND, 'Ad not found');
+    throw new AppError(httpStatus.NOT_FOUND, 'Ads not found');
   }
   return result;
 };
