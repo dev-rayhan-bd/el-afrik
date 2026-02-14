@@ -27,7 +27,7 @@ const createAds = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllAds = catchAsync(async (req: Request, res: Response) => {
-  const result = await AdsServices.getAllAdsFromDB();
+  const result = await AdsServices.getAllAdsFromDB(req.query);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
