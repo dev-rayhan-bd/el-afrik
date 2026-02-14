@@ -10,11 +10,11 @@ const createAdsIntoDB = async (payload: Partial<IAds>) => {
 
 const getAllAdsFromDB = async (query: Record<string, unknown>) => {
 
-    const queryBuilder = new QueryBuilder(AdsModel.find(), query);
-    queryBuilder.filter().sort().paginate();
-    const result = await queryBuilder.modelQuery
-    const meta = await queryBuilder.countTotal();
-  return { meta, result };
+    const queryBuilder = new QueryBuilder(AdsModel.find(), query);//
+    queryBuilder.filter().sort().paginate();//
+    const result = await queryBuilder.modelQuery//
+    const meta = await queryBuilder.countTotal();//
+  return { meta, result };//
 };
 
 const deleteAdsFromDB = async (id: string) => {
