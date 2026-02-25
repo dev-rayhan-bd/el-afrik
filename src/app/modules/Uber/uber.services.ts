@@ -4,7 +4,9 @@ import AppError from '../../errors/AppError';
 import httpStatus from 'http-status';
 
 const UBER_TOKEN_URL = 'https://login.uber.com/oauth/v2/token';
-const UBER_API_BASE = 'https://api.uber.com/v1/customers';
+const UBER_API_BASE = config.uber_env === 'production' 
+  ? 'https://api.uber.com/v1/customers' 
+  : 'https://sandbox-api.uber.com/v1/customers';
 
 const RESTAURANT_ADDRESS = "8882 170 St NW, Edmonton, AB T5T 3J7, Canada";
 // --- MOCK MODE---
@@ -18,14 +20,19 @@ const getUberToken = async () => {
     client_id: config.uber_client_id as string,
     client_secret: config.uber_client_secret as string,
     grant_type: 'client_credentials',
-    scope: 'delivery',
+    scope: 'eats.deliveries',
   });
 
-  try {
+try {
     const response = await axios.post(UBER_TOKEN_URL, params);
     return response.data.access_token;
   } catch (error: any) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "Uber Auth Failed: Whitelisting pending");
+
+    console.error("Uber Auth Error Data:", error.response?.data);
+    
+
+    const errorMessage = error.response?.data?.error_description || "Uber Auth Failed";
+    throw new AppError(httpStatus.UNAUTHORIZED, `Uber Auth Failed: ${errorMessage}`);
   }
 };
 
