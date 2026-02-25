@@ -383,33 +383,88 @@ const getDeliveryFee = catchAsync(async (req: Request, res: Response) => {
 });
 
 //uber webhook
+// const handleUberWebhook = catchAsync(async (req: Request, res: Response) => {
+//   const { delivery_id, status } = req.body; 
+
+
+//   const order = await OrderModel.findOne({ uberDeliveryId: delivery_id });
+  
+//   if (order) {
+//     order.uberStatus = status; 
+    
+//     if (status === 'delivered') {
+//       order.orderStatus = OrderStatus.DELIVERED;
+//       order.deliveredAt = new Date();
+//     }
+
+//     await order.save();
+
+//     await sendNotification(
+//       order.user.toString(),
+//       'Delivery Update 🚚',
+//       `Your Uber delivery status: ${status.replace(/_/g, ' ')}.`,
+//       'order'
+//     );
+//   }
+//   res.status(200).send('Webhook Received'); 
+// });
+
+
 const handleUberWebhook = catchAsync(async (req: Request, res: Response) => {
   const { delivery_id, status } = req.body; 
 
 
   const order = await OrderModel.findOne({ uberDeliveryId: delivery_id });
-  if (order) {
-    order.uberStatus = status; 
-    
-    if (status === 'delivered') {
+  
+  if (!order) {
+    return res.status(200).send('Order not found, but webhook received');
+  }
+
+
+  let notificationTitle = 'Delivery Update 🚚';
+  let notificationMessage = `Your order status is now: ${status.replace(/_/g, ' ')}`;
+
+
+  switch (status) {
+    case 'pickup':
+      notificationMessage = "Rider is heading to the restaurant to collect your order.";
+      break;
+    case 'pickup_complete':
+      notificationMessage = "Rider has picked up your order and is on the way to you! 🛵";
+      break;
+    case 'dropoff':
+      notificationMessage = "Rider is nearby! Please get ready to receive your order.";
+      break;
+    case 'delivered':
+      notificationMessage = "Your order has been delivered successfully. Enjoy your meal! 🍱";
       order.orderStatus = OrderStatus.DELIVERED;
       order.deliveredAt = new Date();
-    }
-
-    await order.save();
-
-    await sendNotification(
-      order.user.toString(),
-      'Delivery Update 🚚',
-      `Your Uber delivery status: ${status.replace(/_/g, ' ')}.`,
-      'order'
-    );
+      break;
+    case 'canceled':
+      notificationTitle = 'Order Canceled ❌';
+      notificationMessage = "Your Uber delivery has been canceled. Please contact our support.";
+      order.orderStatus = OrderStatus.CANCELLED;
+      break;
+    case 'returned':
+      notificationMessage = "The delivery couldn't be completed and is being returned to the restaurant.";
+      break;
   }
-  res.status(200).send('Webhook Received'); 
+
+
+  order.uberStatus = status; 
+  await order.save();
+
+
+  await sendNotification(
+    order.user.toString(),
+    notificationTitle,
+    notificationMessage,
+    'order'
+  );
+
+
+  res.status(200).send('Webhook Received and Processed'); 
 });
-
-
-
 
 
 
