@@ -27,7 +27,6 @@ jobs:
             mkdir -p ~/app
             cd ~/app
             
-            # গিট সেটআপ (যদি ফোল্ডার খালি না থাকে তবুও কাজ করবে)
             if [ ! -d ".git" ]; then
               git init
               git remote add origin https://github.com/sparktechagency/elafrik_backend.git
@@ -43,4 +42,5 @@ jobs:
             
             pm2 delete el-afrik || true
             pm2 start dist/server.js --name "el-afrik"
+           
             pm2 save
