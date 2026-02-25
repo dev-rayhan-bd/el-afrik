@@ -9,7 +9,7 @@ const UBER_API_BASE = 'https://api.uber.com/v1/customers';
 const RESTAURANT_ADDRESS = "8882 170 St NW, Edmonton, AB T5T 3J7, Canada";
 // --- MOCK MODE---
 
-const IS_MOCK_MODE = false; 
+const IS_MOCK_MODE = true; 
 
 const getUberToken = async () => {
   if (IS_MOCK_MODE) return "mock_access_token";
