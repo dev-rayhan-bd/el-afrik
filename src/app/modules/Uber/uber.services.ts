@@ -58,7 +58,7 @@ export const getUberDeliveryQuote = async (dropoffAddress: string) => {
       quoteId: response.data.id,
       fee: parseFloat((response.data.fee / 100).toFixed(2)),
       currency: response.data.currency_type,
-      duration: Math.ceil((response.data.estimated_pickup_eta_seconds + response.data.estimated_dropoff_eta_seconds) / 60)
+    duration: Math.ceil(((response.data.estimated_pickup_eta_seconds || 0) + (response.data.estimated_dropoff_eta_seconds || 0)) / 60) || 0
     };
   } catch (error: any) {
     throw new AppError(httpStatus.BAD_REQUEST, "Uber Quote Error");
