@@ -16,31 +16,29 @@ jobs:
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ secrets.HOST }}     
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}       
           script: |
             # NVM এবং Node লোড করা (npm/pm2 পাওয়ার জন্য)
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            
+
             mkdir -p ~/app
             cd ~/app
-            
-            if [ ! -d ".git" ]; then
-              git init
-              git remote add origin https://github.com/sparktechagency/elafrik_backend.git
-            fi
-            
-            git fetch --all
 
-            git reset --hard origin/main
-            
-            npm install
-            
-            npm run build
-            
+            if [ ! -d ".git" ]; then
+              git clone https://github.com/sparktechagency/elafrik_backend.git .
+            else
+              git pull origin main
+            fi
+
+            # Yarn দিয়ে ইনস্টল এবং বিল্ড করা (যেহেতু আপনি yarn পছন্দ করেন)
+            npm install -g yarn || true
+            yarn install
+            yarn build
+
+            # PM2 রিস্টার্ট লজিক
             pm2 delete el-afrik || true
             pm2 start dist/server.js --name "el-afrik"
-           
             pm2 save
