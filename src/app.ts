@@ -26,6 +26,7 @@ app.use(
       'https://el-afrik.vercel.app',
       'http://15.223.245.199',
       'http://15.223.245.199:3000',
+      'dashboard.el-afriklounge.com'
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
