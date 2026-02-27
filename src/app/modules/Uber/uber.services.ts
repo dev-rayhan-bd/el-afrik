@@ -20,7 +20,7 @@ const getUberToken = async () => {
     client_id: config.uber_client_id as string,
     client_secret: config.uber_client_secret as string,
     grant_type: 'client_credentials',
-    scope: 'eats.deliveries',
+    scope: 'eats.deliveries direct.organizations',
   });
 
 try {
@@ -61,7 +61,16 @@ export const getUberDeliveryQuote = async (dropoffAddress: string) => {
     duration: Math.ceil(((response.data.estimated_pickup_eta_seconds || 0) + (response.data.estimated_dropoff_eta_seconds || 0)) / 60) || 0
     };
   } catch (error: any) {
-    throw new AppError(httpStatus.BAD_REQUEST, "Uber Quote Error");
+   
+    const errorMessage = error.response?.data?.message || 
+                         error.response?.data?.kind || 
+                         "Uber could not provide a quote for this address.";
+
+ 
+    // console.error("Uber API Detail Error:", error.response?.data);
+
+    
+    throw new AppError(httpStatus.BAD_REQUEST, errorMessage);
   }
 };
 
