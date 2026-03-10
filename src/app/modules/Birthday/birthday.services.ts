@@ -174,7 +174,7 @@ const claimFreeOrder = async (userId: string, productId: string, pickupTime: str
       customer_email: user.email,
       line_items: [{
         price_data: {
-          currency: 'usd',
+          currency: 'cad',
           product_data: { name: `Delivery fee for Birthday Gift: ${product.name}` },
           unit_amount: Math.round(totalAmount * 100),
         },

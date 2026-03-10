@@ -75,7 +75,7 @@ const fullName = user.fullName || `${user.firstName} ${user.lastName}`;
     customer_email: customerEmail,
     line_items: [{
       price_data: {
-        currency: 'usd',
+        currency: 'cad',
         product_data: { name: `Catering Package: ${pkg.name}` },
         unit_amount: Math.round(totalPrice * 100),
       },

@@ -102,7 +102,7 @@ const createCheckoutSession = async (input: ICreateOrderInput) => {
 
     lineItems.push({
       price_data: {
-        currency: "usd",
+        currency: "cad",
         product_data: {
           name: product.name,
         },
@@ -169,7 +169,7 @@ const contact = user.contact;
   if (orderType === OrderType.DELIVERY && totalDeliveryFee > 0) {
     lineItems.push({
       price_data: {
-        currency: "usd",
+        currency: "cad",
         product_data: { name: "Delivery Fee" },
         unit_amount: Math.round(totalDeliveryFee * 100),
       },
@@ -317,7 +317,7 @@ let deliveryFee = 0;
 
   const lineItems = [{
     price_data: {
-      currency: "usd",
+      currency: "cad",
       product_data: { name: product.name },
       unit_amount: Math.round(unitPrice * 100),
     },
@@ -327,7 +327,7 @@ let deliveryFee = 0;
   if (deliveryFee > 0) {
     lineItems.push({
       price_data: {
-        currency: "usd",
+        currency: "cad",
         product_data: { name: "Delivery Fee" },
         unit_amount: Math.round(deliveryFee * 100),
       },
@@ -467,7 +467,7 @@ const contact = user.contact;
 
   const lineItems = [{
     price_data: {
-      currency: "usd",
+      currency: "cad",
       product_data: { 
         name: `${product.name} (Promo: ${promo.specialPromoCode})`,
         description: `Special discount applied via promo code`
@@ -480,7 +480,7 @@ const contact = user.contact;
   if (deliveryFee > 0) {
     lineItems.push({
       price_data: {
-        currency: "usd",
+        currency: "cad",
         product_data: { name: "Delivery Fee", description: `Special discount applied via promo code` },
         unit_amount: Math.round(deliveryFee * 100),
       },

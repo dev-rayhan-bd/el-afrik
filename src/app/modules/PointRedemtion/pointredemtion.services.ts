@@ -291,7 +291,7 @@ const purchaseWithPoints = async (input: IPointRedemptionInput) => {
 
   const fullName = user.fullName || `${user.firstName} ${user.lastName}`;
 
-  // ১. পয়েন্ট ক্যালকুলেশন
+
   const costCalculation = await calculateRedemptionCost(items, userId);
   if (!costCalculation.canRedeem) {
     throw new AppError(httpStatus.BAD_REQUEST, `Insufficient points.`);
@@ -299,19 +299,19 @@ const purchaseWithPoints = async (input: IPointRedemptionInput) => {
 
   const totalPointsRequired = costCalculation.totalPointsRequired;
 
-  // ২. অর্ডার আইটেম তৈরি
+ 
   const orderItems: IOrderItem[] = costCalculation.items.map((item) => ({
     product: item.productId,
     name: item.name,
     image: item.image,
-    price: 0, // আইটেম প্রাইস ০ কারণ এটি পয়েন্ট দিয়ে কেনা
+    price: 0,
     quantity: item.quantity,
     total: 0,
     points: 0,
     pointsCost: item.totalPoints,
   }));
 
-  // ৩. ডেলিভারি অর্ডার হলে Stripe Session তৈরি করা
+
   let stripeUrl = null;
   let paymentStatus = PaymentStatus.POINTS_PAID; 
 
@@ -319,21 +319,21 @@ const purchaseWithPoints = async (input: IPointRedemptionInput) => {
     if (!uberFee || uberFee <= 0) {
       throw new AppError(httpStatus.BAD_REQUEST, 'Delivery fee is required for delivery orders');
     }
-    paymentStatus = PaymentStatus.PENDING; // ডেলিভারি ফি বাকি
+    paymentStatus = PaymentStatus.PENDING;
   }
 
-  // ৪. অর্ডার তৈরি (Database-এ)
+  // (Database-এ)
   const order = await OrderModel.create({
     user: userId,
     items: orderItems,
     subtotal: 0,
     deliveryFee: uberFee || 0,
-    totalAmount: uberFee || 0, // শুধুমাত্র ডেলিভারি ফি-ই হবে টোটাল এমাউন্ট
+    totalAmount: uberFee || 0, 
     pointsUsed: totalPointsRequired,
     orderType: OrderType.POINT_REDEMPTION,
     orderStatus: OrderStatus.ONGOING,
     paymentStatus: paymentStatus,
-    paymentMethod: PaymentMethod.POINTS, // মূল মেথড পয়েন্ট হলেও ডেলিভারি কার্ডে হবে
+    paymentMethod: PaymentMethod.POINTS, 
     customerEmail: user.email,
     customerName: fullName,
     customerPhone: user.contact,
@@ -345,7 +345,6 @@ const purchaseWithPoints = async (input: IPointRedemptionInput) => {
     notes,
   });
 
-  // ৫. ডেলিভারি টাইপ হলে Stripe Session জেনারেট করা
   if (deliveryType === 'delivery') {
      if (uberFee === undefined || uberFee === null) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Delivery fee is required for delivery orders');
@@ -356,7 +355,7 @@ const purchaseWithPoints = async (input: IPointRedemptionInput) => {
       customer_email: user.email,
       line_items: [{
         price_data: {
-          currency: 'usd',
+          currency: 'cad',
           product_data: { 
             name: `Delivery Fee for Point Redemption`,
             description: `Items: ${items.length} (Paid via Points)`
@@ -379,12 +378,12 @@ const purchaseWithPoints = async (input: IPointRedemptionInput) => {
 
     return {
       success: true,
-      stripeUrl, // ফ্রন্টএন্ড এই লিংকে রিডাইরেক্ট করবে
+      stripeUrl, 
       message: 'Please pay the delivery fee to complete your redemption.'
     };
   }
 
-  // ৬. যদি Pickup হয় তবে এখনই পয়েন্ট কেটে অর্ডার কনফার্ম করা
+ 
   await RewardServices.redeemPoints({
     userId,
     points: totalPointsRequired,
