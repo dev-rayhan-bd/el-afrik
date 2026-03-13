@@ -36,6 +36,20 @@ export const sendNotification = async (
           title,
           body: message,
         },
+             apns: {
+    payload: {
+      aps: {
+        sound: "default", 
+        badge: 1,        
+      },
+    },
+  },
+
+  android: {
+    notification: {
+      sound: "default",
+    },
+  },
         token: user.fcmToken, 
       };
 
