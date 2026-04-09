@@ -6,7 +6,7 @@ import { upload } from '../../middleware/multer';
 
 const router = Router();
 
-// Helper to parse JSON from Form-Data
+// Helper to parse JSON from Form-Datas
 const parseBody = (req: Request, res: Response, next: NextFunction) => {
   if (req.body.body) {
     req.body = JSON.parse(req.body.body);
