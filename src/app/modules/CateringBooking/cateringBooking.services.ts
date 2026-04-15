@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import config from '../../config';
 import PDFDocument from 'pdfkit';
 import { CateringBookingModel, CateringPackageModel } from './cateringBooking.model';
-import { ICateringPackage, CateringPaymentStatus, BookingStatus } from './cateringBooking.interface';
+import { ICateringPackage, CateringPaymentStatus, BookingStatus, CateringPricingType, ICateringBookingDocument, ICateringPackageDocument } from './cateringBooking.interface';
 import AppError from '../../errors/AppError';
 import httpStatus from 'http-status';
 import sendEmail from '../../utils/sendEmail';
@@ -44,31 +44,41 @@ const getAllPackagesFromDB = async (query: Record<string, unknown>) => {
 
 // --- User: Reservation Logic ---
 const createCheckoutSession = async (userId: string, payload: any) => {
-  const { packageId, guestCount, eventDate, venueAddress, contactNumber, customerEmail, notes,  uberQuoteId,
-    uberFee   } = payload;
+  const { packageId, quantity, eventDate, venueAddress, contactNumber, customerEmail, notes } = payload;
 
-  const pkg = await CateringPackageModel.findById(packageId);
+
+  const pkg = (await CateringPackageModel.findById(packageId)) as ICateringPackageDocument;
   if (!pkg) throw new AppError(httpStatus.NOT_FOUND, 'Package not found');
-  if (guestCount < pkg.minGuests) throw new AppError(httpStatus.BAD_REQUEST, `Minimum guests: ${pkg.minGuests}`);
 
-  const totalPrice = pkg.pricePerPerson * guestCount;
 
-  const booking = await CateringBookingModel.create({
+  const minQty = pkg.minOrderQuantity || 0;
+  if (quantity < minQty) {
+    const unitName = pkg.pricingType === CateringPricingType.PER_PERSON ? 'guests' : 
+                     pkg.pricingType === CateringPricingType.PER_TRAY ? 'trays' : 'items';
+    throw new AppError(httpStatus.BAD_REQUEST, `Minimum ${unitName} required: ${minQty}`);
+  }
+
+  const totalPrice = pkg.price * quantity;
+
+  const booking = (await CateringBookingModel.create({
     user: userId,
     package: packageId,
     eventDate,
-    guestCount,
+    quantity,
     totalPrice,
     venueAddress,
     contactNumber,
     notes,
-       uberQuoteId, 
-    uberFee 
-  });
-const user = await UserModel.findById(userId);
-if (!user) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+    pricingType: pkg.pricingType,
+    paymentStatus: CateringPaymentStatus.PENDING,
+    status: BookingStatus.PENDING
+  })) as ICateringBookingDocument;
 
-const fullName = user.fullName || `${user.firstName} ${user.lastName}`;
+
+  const unitLabel = pkg.pricingType === CateringPricingType.PER_PERSON ? 'Person' : 
+                    pkg.pricingType === CateringPricingType.PER_TRAY ? 'Tray' : 'Item';
+
+  
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     mode: 'payment',
@@ -76,21 +86,73 @@ const fullName = user.fullName || `${user.firstName} ${user.lastName}`;
     line_items: [{
       price_data: {
         currency: 'cad',
-        product_data: { name: `Catering Package: ${pkg.name}` },
-        unit_amount: Math.round(totalPrice * 100),
+        product_data: { 
+          name: `Catering: ${pkg.name}`,
+          description: `Pricing based on per ${unitLabel}` 
+        },
+        unit_amount: Math.round(pkg.price * 100),
       },
-      quantity: 1,
+      quantity: quantity,
     }],
-    // metadata: { bookingId: booking._id.toString(),   customerName: fullName ,type: 'catering' },
-      metadata: { bookingId: booking._id.toString(), type: 'catering', uberQuoteId: uberQuoteId },
+    metadata: { bookingId: booking._id.toString(), type: 'catering' },
     success_url: `${config.server_url}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${config.server_url}/payment-cancel`,
   });
 
   booking.stripeSessionId = session.id;
   await booking.save();
+
   return session.url;
 };
+
+// const createCheckoutSession = async (userId: string, payload: any) => {
+//   const { packageId, guestCount, eventDate, venueAddress, contactNumber, customerEmail, notes,  uberQuoteId,
+//     uberFee   } = payload;
+
+//   const pkg = await CateringPackageModel.findById(packageId);
+//   if (!pkg) throw new AppError(httpStatus.NOT_FOUND, 'Package not found');
+//   if (guestCount < pkg.minGuests) throw new AppError(httpStatus.BAD_REQUEST, `Minimum guests: ${pkg.minGuests}`);
+
+//   const totalPrice = pkg.pricePerPerson * guestCount;
+
+//   const booking = await CateringBookingModel.create({
+//     user: userId,
+//     package: packageId,
+//     eventDate,
+//     guestCount,
+//     totalPrice,
+//     venueAddress,
+//     contactNumber,
+//     notes,
+//        uberQuoteId, 
+//     uberFee 
+//   });
+// const user = await UserModel.findById(userId);
+// if (!user) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+
+// const fullName = user.fullName || `${user.firstName} ${user.lastName}`;
+//   const session = await stripe.checkout.sessions.create({
+//     payment_method_types: ['card'],
+//     mode: 'payment',
+//     customer_email: customerEmail,
+//     line_items: [{
+//       price_data: {
+//         currency: 'cad',
+//         product_data: { name: `Catering Package: ${pkg.name}` },
+//         unit_amount: Math.round(totalPrice * 100),
+//       },
+//       quantity: 1,
+//     }],
+//     // metadata: { bookingId: booking._id.toString(),   customerName: fullName ,type: 'catering' },
+//       metadata: { bookingId: booking._id.toString(), type: 'catering', uberQuoteId: uberQuoteId },
+//     success_url: `${config.server_url}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+//     cancel_url: `${config.server_url}/payment-cancel`,
+//   });
+
+//   booking.stripeSessionId = session.id;
+//   await booking.save();
+//   return session.url;
+// };
 
 // --- Webhook Call: Auto Confirm & Email Invoice ---
 const handlePaymentSuccess = async (bookingId: string) => {
@@ -132,7 +194,7 @@ const handlePaymentSuccess = async (bookingId: string) => {
         <ul>${menuItems}</ul>
         <hr/>
         <p><b>Event Date:</b> ${new Date(booking.eventDate).toLocaleDateString()}</p>
-        <p><b>Guests:</b> ${booking.guestCount}</p>
+        <p><b>Guests:</b> ${booking.quantity}</p>
         <p><b>Total Price:</b> $${booking.totalPrice}</p>
         <p><b>Venue:</b> ${booking.venueAddress}</p>
         <p>Thank you for choosing El-afrik!</p>
@@ -153,6 +215,9 @@ const handlePaymentSuccess = async (bookingId: string) => {
   'catering'
 );
 };
+
+
+
 const getAllBookings = async (query: Record<string, unknown>) => {
   const bookingQuery = new QueryBuilder(
     CateringBookingModel.find().populate('user package'), 
@@ -209,7 +274,7 @@ const generateInvoicePDF = async (bookingId: string) => {
   doc.fontSize(14).text('Event Details', 300, 180);
   doc.fontSize(10).text(`Package: ${(booking.package as any).name}`, 300, 200);
   doc.text(`Event Date: ${new Date(booking.eventDate).toLocaleDateString()}`, 300, 215);
-  doc.text(`Total Guests: ${booking.guestCount}`, 300, 230);
+  doc.text(`Total Guests: ${booking.quantity}`, 300, 230);
 
   // Table Header
   const tableTop = 300;
@@ -220,12 +285,11 @@ const generateInvoicePDF = async (bookingId: string) => {
   doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).stroke();
 
   // Table Content
-  const itemRowTop = tableTop + 30;
+    const itemRowTop = tableTop + 30;
   doc.fontSize(10).text((booking.package as any).name, 50, itemRowTop);
-  doc.text(booking.guestCount.toString(), 350, itemRowTop);
-  doc.text(`$${(booking.package as any).pricePerPerson}`, 400, itemRowTop);
+  doc.text(booking.quantity.toString(), 350, itemRowTop); 
+  doc.text(`$${(booking.package as any).price}`, 400, itemRowTop);
   doc.text(`$${booking.totalPrice}`, 500, itemRowTop);
-
   // Total
   doc.moveTo(50, itemRowTop + 20).lineTo(550, itemRowTop + 20).stroke();
   doc.fontSize(14).text(`Grand Total: $${booking.totalPrice}`, 400, itemRowTop + 40);
