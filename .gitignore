@@ -5,5 +5,6 @@ firebase-admin-config.json
 branch_structure.json
 .gitignore
 .env
+
 temp_auto_push.bat
 temp_interactive_push.bat
